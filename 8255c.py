@@ -26,21 +26,26 @@ class CompilationError(Exception):
 PRELOAD_REGEX = re.compile(rb"(\w+):\s+\"(.+)\"")
 INSTRUCTS_BY_VERB = {v.opcode: (k, v) for k, v in INSTRUCTIONS.items()}
 
-def generate_preload(section: "Section") -> tuple[bytearray, int]:
-    store, offset = bytearray([0] * (0x3000 - 0x2000)), 0
+def generate_preload(section: "Section") -> tuple[tuple[bytearray, int], dict[str, int]]:
+    store, offset, strmap = bytearray([0] * (0x3000 - 0x2000)), 0, {}
     for index, line in enumerate(section.lines):
-        line_match = PRELOAD_REGEX.match(line.encode() + b"\0")
+        line_match = PRELOAD_REGEX.match(line.encode())
         if line_match is None:
             raise CompilationError(index, section, "Invalid line inside preload section!")
 
+        # Store in string mapping
         key, value = line_match.groups()
-        store[offset : offset + len(value)] = value
+        strmap[key.decode()] = 0x2000 + offset
+
+        # Place in block
+        value += b"\0"
+        store[offset : offset + len(value)] = value.decode("unicode-escape").encode("utf-8")
         offset += len(value)
 
-    return store, index
+    return (store, index), strmap
 
 def generate_snapshot(sections: dict[str, "Section"]) -> bytearray:
-    components = {"code": [bytearray([0] * (0x2000 - 0x0100)), 0]}
+    components, strmap = {"code": [bytearray([0] * (0x2000 - 0x0100)), 0]}, {}
     def write(item: int | bytes) -> None:
         array, index = components["code"]
         if isinstance(item, int):
@@ -65,7 +70,7 @@ def generate_snapshot(sections: dict[str, "Section"]) -> bytearray:
     subroutines: dict[str, int] = {}
     for name, section in sections.items():
         if name == "preload":
-            components["data"] = generate_preload(section)
+            components["data"], strmap = generate_preload(section)
             continue
 
         subroutines[name] = components["code"][1]
@@ -89,11 +94,15 @@ def generate_snapshot(sections: dict[str, "Section"]) -> bytearray:
                     # This should either be a memory address (preferred), or a
                     # direct value (loadi), or lastly a subroutine address
                     if target.startswith("&"):
-                        if target[1:] not in subroutines:
-                            raise CompilationError(index, section, "Reference to unknown subroutine!")
+                        if target[1:] in strmap:
+                            write(strmap[target[1:]].to_bytes(2))
 
-                        write(subroutines[target[1:]].to_bytes(2))
-                    
+                        else:
+                            if target[1:] not in subroutines:
+                                raise CompilationError(index, section, "Reference to unknown subroutine!")
+
+                            write(subroutines[target[1:]].to_bytes(2))
+                        
                     elif target.startswith("0x"):
                         write(int(target, 16).to_bytes(2))
 

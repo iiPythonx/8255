@@ -6,6 +6,7 @@ from sys import argv
 from pathlib import Path
 
 from core import INSTRUCTIONS
+from core.drivers import DriverManager
 
 MEM_CODE_RANGE = (0x0100, 0x2000)
 MEM_STACK_RANGE = (0x3000, 0x4000)
@@ -26,6 +27,7 @@ class Emu8255:
     def __init__(self) -> None:
         self.cycle = 0
         self.memory = bytearray(0x4000)
+        self.drivers = DriverManager(self)
 
     def read_register(self, register_id: int) -> int:
         offset = REG_MAPPING[register_id]
@@ -36,14 +38,12 @@ class Emu8255:
         self.memory[offset:offset + 2] = value.to_bytes(2)
 
     def push_stack(self, value: int) -> None:
-        print(f"Stack push! {value}")
         existing_offset = self.read_register(0xC)
         stack_offset = MEM_STACK_RANGE[1] - existing_offset
         self.memory[stack_offset:stack_offset + 2] = value.to_bytes(2)
         self.write_register(0xC, existing_offset + 2)
 
     def pop_stack(self) -> int:
-        print("Stack pop!")
         existing_offset = self.read_register(0xC) - 2
         stack_offset = MEM_STACK_RANGE[1] - existing_offset
         self.write_register(0xC, existing_offset)
@@ -75,8 +75,6 @@ class Emu8255:
             read_offset += arg.size
 
         # Evaluate
-        print(instruction, "\n")
-
         match instruction.opcode:
             case "HLT":
                 exit()
@@ -101,13 +99,46 @@ class Emu8255:
             case "RET":
                 self.write_register(0xA, self.pop_stack())
 
+            case "STR":
+                offset, value = arguments[1], self.read_register(arguments[0])
+                if not self.drivers.on_write(offset, value):
+                    self.memory[offset:offset + 2] = value.to_bytes(2)
+
+            case "LDM":
+                offset = arguments[1]
+                self.write_register(
+                    arguments[0],
+                    self.drivers.on_read(offset) or int.from_bytes(self.memory[offset:offset + 2])
+                )
+
+            case "CMP":
+                left, right = self.read_register(arguments[0]), self.read_register(arguments[1])
+                result = 255 if left < right else 1 if left > right else 0
+                self.write_register(0xB, result)
+
+            case "JEQ" if self.read_register(0xB) == 0:
+                self.write_register(0xA, arguments[0])
+                
+            case "JNE" if self.read_register(0xB) != 0:
+                self.write_register(0xA, arguments[0])
+
+            case "JGT" if self.read_register(0xB) == 1:
+                self.write_register(0xA, arguments[0])
+
+            case "JLT" if self.read_register(0xB) == 255:
+                self.write_register(0xA, arguments[0])
+
+            case "JGE" if self.read_register(0xB) in {1, 0}:
+                self.write_register(0xA, arguments[0])
+
+            case "JLE" if self.read_register(0xB) in {0, 255}:
+                self.write_register(0xA, arguments[0])
+
         new_current_line = self.read_register(0xA)
         if current_line == new_current_line:
             self.write_register(0xA, new_current_line + read_offset)
-            print(f"Autostepped to {new_current_line + read_offset} from {current_line}")
 
         self.cycle += 1
-        self.step_screen()
 
     def write_range(self, data: bytes, offset: int) -> None:
         self.memory[offset:offset + len(data)] = data
@@ -127,8 +158,5 @@ if __name__ == "__main__":
     system = Emu8255()
     system.write_range(data[:code_range], 0x0100)
     system.write_range(data[code_range:], 0x2000)
-
-    system.step_screen()
     while True:
-        input("[ENTER] Step")
         system.step()
