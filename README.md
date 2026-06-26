@@ -22,7 +22,7 @@ python3 8255e.py examples/epoch.bin
 
 ## Specifications
 
-Last updated: JUNE 26, 2026
+Last updated: JUNE 26, 2026  
 Version: 1.1
 
 ### Memory
@@ -79,9 +79,14 @@ R = MEM ADDR
 0x14: POP R   (POP STACK TO REGISTER)
 ```
 
+### Drivers
+
+See the [core/drivers](./core/drivers) tree for a list of drivers.  
+It's up to the driver maintainer to produce accurate documentation regarding their use.
+
 ## Inspiration
 
-8255 is based on [BASIC](https://en.wikipedia.org/wiki/BASIC), & [Assembly](https://en.wikipedia.org/wiki/Assembly_language).  
+8255 is based on [BASIC](https://en.wikipedia.org/wiki/BASIC) and [Assembly](https://en.wikipedia.org/wiki/Assembly_language).  
 The CPU itself has no real backing inspiration, it's just a normal 16-bit chip w/ RAM.
 
 ## Copyright
