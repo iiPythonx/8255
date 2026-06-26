@@ -8,13 +8,16 @@ class Argument:
     size: int
 
 class Register(Argument):
-    size = 1
+    def __init__(self, name: str) -> None:
+        super().__init__(name = name, size = 1)
 
 class Address(Argument):
-    size = 2
+    def __init__(self, name: str) -> None:
+        super().__init__(name = name, size = 2)
 
 class Value(Argument):
-    size = 2
+    def __init__(self, name: str) -> None:
+        super().__init__(name = name, size = 2)
 
 @dataclass
 class Instruction:
@@ -40,32 +43,32 @@ INSTRUCTIONS = {
         "STORE MEMORY"
     ),
     0x04: Instruction(
-        [Register("TO ADD TO"), Register("TO ADD")].
+        [Register("TO ADD TO"), Register("TO ADD")],
         "ADD",
         "ADD"
     ),
     0x05: Instruction(
-        [Register("TO SUBTRACT FROM"), Register("TO SUBTRACT")].
+        [Register("TO SUBTRACT FROM"), Register("TO SUBTRACT")],
         "SUB",
         "SUBTRACT"
     ),
     0x06: Instruction(
-        [Register("TO MULTIPLY"), Register("TO MULTIPLY BY")].
+        [Register("TO MULTIPLY"), Register("TO MULTIPLY BY")],
         "MUL",
         "MULTIPLY"
     ),
     0x07: Instruction(
-        [Register("TO DIVIDE"), Register("TO DIVIDE BY")].
+        [Register("TO DIVIDE"), Register("TO DIVIDE BY")],
         "DIV",
         "DIVIDE"
     ),
     0x08: Instruction(
-        [Register("TO RAISE"), Register("TO RAISE TO")].
+        [Register("TO RAISE"), Register("TO RAISE TO")],
         "POW",
         "POWER"
     ),
     0x09: Instruction(
-        [Register("LEFT COMP"), Register("RIGHT COMP")].
+        [Register("LEFT COMP"), Register("RIGHT COMP")],
         "CMP",
         "COMPARE"
     ),
@@ -120,4 +123,16 @@ INSTRUCTIONS = {
         "POP",
         "POP STACK TO REGISTER"
     )
+}
+
+REGISTERS = {
+    "R1": 0x0,
+    "R2": 0x1,
+    "R3": 0x2,
+    "R4": 0x3,
+    "R5": 0x4,
+    "R6": 0x5,
+    "LC": 0xA,
+    "CR": 0xB,
+    "SP": 0xC,
 }

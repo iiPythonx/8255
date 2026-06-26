@@ -4,7 +4,10 @@
 import re
 from sys import argv
 from pathlib import Path
+from time import perf_counter
 from dataclasses import dataclass
+
+from core import INSTRUCTIONS, REGISTERS
 
 # Exceptions
 class CompilationError(Exception):
@@ -21,6 +24,7 @@ class CompilationError(Exception):
 
 # Compilation
 PRELOAD_REGEX = re.compile(rb"(\w+):\s+\"(.+)\"")
+INSTRUCTS_BY_VERB = {v.opcode: (k, v) for k, v in INSTRUCTIONS.items()}
 
 def generate_preload(section: "Section") -> tuple[bytearray, int]:
     store, offset = bytearray([0] * (0x4000 - 0x2000 + 1)), 0
@@ -36,12 +40,72 @@ def generate_preload(section: "Section") -> tuple[bytearray, int]:
 
     return store, index
 
-def generate_snapshot(sections: dict[str, "Section"]) -> bytes:
-    components = {"code": (bytearray([0] * (0x2000 - 0x0100 + 1)), 0)}
+def generate_snapshot(sections: dict[str, "Section"]) -> bytearray:
+    components = {"code": [bytearray([0] * (0x2000 - 0x0100 + 1)), 0]}
+    def write(item: int | bytes) -> None:
+        array, index = components["code"]
+        if isinstance(item, int):
+            array[index] = item
+            components["code"][1] += 1
+            return
 
-    # Fetch string mapping / preload data
-    if "preload" in sections:
-        components["data"] = generate_preload(sections["preload"])
+        array[index : index + len(item)] = item
+        components["code"][1] += len(item)
+
+    print(f"OFFSET | {'INSTRUCTION':<30} | BYTECODE")
+    print("-" * 80)
+
+    subroutines: dict[str, int] = {}
+    for name, section in sections.items():
+        if name == "preload":
+            components["data"] = generate_preload(section)
+            continue
+
+        subroutines[name] = components["code"][1]
+        for index, line in enumerate(section.lines):
+            arguments = line.split(",")
+            instruction, *arguments = [a.strip() for a in arguments[0].split() + arguments[1:]]
+
+            # Ensure instruction is valid
+            id, instruction = INSTRUCTS_BY_VERB.get(instruction.upper()) or (None, None)
+            if instruction is None:
+                raise CompilationError(index, section, "Invalid instruction!")
+
+            write(id)
+
+            # Confirm argument types
+            total_size = 1
+            for aindex, argument in enumerate(instruction.args):
+                target = arguments[aindex]
+                if argument.size == 2:
+
+                    # This should either be a memory address (preferred), or a
+                    # direct value (loadi), or lastly a subroutine address
+                    if target.startswith("&"):
+                        if target[1:] not in subroutines:
+                            raise CompilationError(index, section, "Reference to unknown subroutine!")
+
+                        write(subroutines[target[1:]].to_bytes(2))
+                    
+                    elif target.startswith("0x"):
+                        write(int(target, 16).to_bytes(2))
+
+                    else:
+                        write(int(target).to_bytes(2))
+
+                elif argument.size == 1:
+                    register_id = REGISTERS[target.upper()]
+                    if register_id is None:
+                        raise CompilationError(index, section, "Reference to unknown register!")
+
+                    write(register_id)
+
+                total_size += argument.size
+
+            current_array, current_index = components["code"]
+            print(f"0x{current_index:04x} | {line:<30} | {current_array[current_index - total_size:current_index].hex(' ', 1)}")
+
+    return components["code"][0]
 
 # Parsing
 @dataclass
@@ -66,12 +130,18 @@ def parse_sections_from_file(path: Path) -> dict[str, Section]:
 
     file = File(path, [line.strip() for line in path.read_text().splitlines() if line.strip()])
     for index, line in enumerate(file.lines):
+        if line.startswith("//"):
+            continue
+
         if line[0] == ".":
             push_section()
             active_section = Section(line[1:], index + 1, 0, file, [])
 
         else:
-            active_section.lines.append(line)
+
+            # TODO: This is naive. In the future we need to split only if the found
+            # substring isn't inside a string block. i.e. a preload section.
+            active_section.lines.append(line.split("//")[0].strip())
 
     push_section()
     return sections
@@ -85,4 +155,7 @@ if __name__ == "__main__":
         exit("8255c: file does not exist")
 
     sections = parse_sections_from_file(file)
-    print(generate_snapshot(sections))
+
+    start_time = perf_counter()
+    file.with_suffix(".bin").write_bytes(generate_snapshot(sections))
+    print(f"\nCompiled in {(perf_counter() - start_time) * 1000:.2f}ms to {file.with_suffix('.bin')}")
