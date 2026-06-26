@@ -39,16 +39,6 @@ import termios
 
 from core.drivers import DriverManager
 
-def getch() -> int:
-    existing_fileno = sys.stdin.fileno()
-    settings = termios.tcgetattr(existing_fileno)
-    tty.setcbreak(sys.stdin.fileno())
-
-    # Read our character
-    character = sys.stdin.read(1)
-    termios.tcsetattr(existing_fileno, termios.TCSADRAIN, settings)
-    return ord(character)
-
 class STDIODriver:
     def __init__(self, core: DriverManager) -> None:
         core.bind_write(0x0020, self.write_character)
@@ -78,9 +68,15 @@ class STDIODriver:
         self.write("\033[2J\033[H")
 
     def read_stdin_getch(self, memory: bytearray) -> int:
-        return getch()
+        existing_fileno = sys.stdin.fileno()
+        settings = termios.tcgetattr(existing_fileno)
+        tty.setcbreak(sys.stdin.fileno())
+
+        # Read our character
+        character = sys.stdin.read(1)
+        termios.tcsetattr(existing_fileno, termios.TCSADRAIN, settings)
+        return ord(character)
 
     def read_stdin_input(self, memory: bytearray, value: int) -> None:
-        string = input()
-        for index, item in enumerate(string.encode("utf-8") + b"\0"):
+        for index, item in enumerate(input().encode("utf-8") + b"\0"):
             memory[0x2100 + index] = item
