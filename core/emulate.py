@@ -142,21 +142,3 @@ class Emu8255:
 
     def write_range(self, data: bytes, offset: int) -> None:
         self.memory[offset:offset + len(data)] = data
-
-if __name__ == "__main__":
-    if len(argv) < 2:
-        exit("8255e: missing snapshot file")
-
-    file = Path(argv[1])
-    if not file.is_file():
-        exit("8255e: file does not exist")
-
-    data = file.read_bytes()
-    code_range = 0x2000 - 0x0100
-
-    # Setup emulation
-    system = Emu8255()
-    system.write_range(data[:code_range], 0x0100)
-    system.write_range(data[code_range:], 0x2000)
-    while True:
-        system.step()

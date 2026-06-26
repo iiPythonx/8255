@@ -16,8 +16,8 @@ git clone git@github.com:iiPythonx/8255
 cd 8255
 
 # Run the UNIX epoch example
-python3 8255c.py examples/epoch.asm
-python3 8255e.py examples/epoch.bin
+python3 -m core assemble examples/epoch.asm
+python3 -m core run examples/epoch.bin
 ```
 
 ## Specifications

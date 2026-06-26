@@ -44,7 +44,7 @@ def generate_preload(section: "Section") -> tuple[tuple[bytearray, int], dict[st
 
     return (store, index), strmap
 
-def generate_snapshot(sections: dict[str, "Section"]) -> bytearray:
+def generate_snapshot(sections: dict[str, "Section"], zero_jump: bool = False) -> bytearray:
     components, strmap = {"code": [bytearray([0] * (0x2000 - 0x0100)), 0]}, {}
     def write(item: int | bytes) -> None:
         array, index = components["code"]
@@ -63,9 +63,10 @@ def generate_snapshot(sections: dict[str, "Section"]) -> bytearray:
     print(f"OFFSET | {'INSTRUCTION':<30} | BYTECODE")
     print("-" * 80)
 
-    write(INSTRUCTS_BY_VERB["JMP"][0])
-    write(int(0).to_bytes(2))
-    log("jmp &main", 3)
+    if zero_jump:
+        write(INSTRUCTS_BY_VERB["JMP"][0])
+        write(int(0).to_bytes(2))
+        log("jmp &main", 3)
 
     subroutines: dict[str, int] = {}
     for name, section in sections.items():
@@ -121,8 +122,10 @@ def generate_snapshot(sections: dict[str, "Section"]) -> bytearray:
             log(line, total_size)
 
     # Update zero jump to match correct main address
-    if "main" in subroutines:
+    print()
+    if "main" in subroutines and zero_jump:
         components["code"][0][1:3] = subroutines["main"].to_bytes(2)
+        print(f"Zero-jump: main is at 0x{subroutines['main']:04x}")
 
     return components["code"][0] + components.get("data", [bytearray(), 0])[0]
 
@@ -164,17 +167,3 @@ def parse_sections_from_file(path: Path) -> dict[str, Section]:
 
     push_section()
     return sections
-
-if __name__ == "__main__":
-    if len(argv) < 2:
-        exit("8255c: missing program file")
-
-    file = Path(argv[1])
-    if not file.is_file():
-        exit("8255c: file does not exist")
-
-    sections = parse_sections_from_file(file)
-
-    start_time = perf_counter()
-    file.with_suffix(".bin").write_bytes(generate_snapshot(sections))
-    print(f"\nCompiled in {(perf_counter() - start_time) * 1000:.2f}ms to {file.with_suffix('.bin')}")
