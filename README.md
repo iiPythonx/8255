@@ -7,55 +7,83 @@
     <hr>
 </p>
 
-A programming language.
+A 16-bit CPU with 16 KiB of RAM, for playing around with.
 
 ## Installation
 
 ```bash
 git clone git@github.com:iiPythonx/8255
 cd 8255
-python3 -m 8255 SOME_FILE.8255
+
+# Run the UNIX epoch example
+python3 8255c.py examples/epoch.asm
+python3 8255e.py examples/epoch.bin
 ```
 
-## Syntax
+## Specifications
 
-<!-- Using JS for syntax highlighting since its the closest I can find. -->
+Last updated: JUNE 26, 2026
+Version: 1.1
+
+### Memory
 
 ```js
-PROGRAM "Program Name"              // Optional, to be used later
-SIZE 8K BINARY                      // Give this program a 8192 byte stack to work with
-START                               // Required for execution to begin
-  010   out "Hello, world."         // Basic print to the screen
-  020   alc &something :[1]         // Allocate 1 byte to the "something" register
-  030   set &something 251          // Put the number 251 into the "something" register
-  040   out "Number: $something."   // Write the number to the screen
-.                                   // Stop execution, not required
+16 KiB / 16386 B
+
+0x0000 - 0x0100: REGISTERS
+0x0100 - 0x2000: CODE
+0x2000 - 0x3000: DATA
+0x3000 - 0x4000: STACK
 ```
 
-- The `START` keyword must always come before the "code block", ie where the lines of code are stored.
-- The `.` keyword should always be present at the end of the file to denote execution end, however it is optional.
-    - If you do provide `.`, it **must** be at the end of the file (excluding blank lines).
-- The `PROGRAM` directive should be at the top of the file, however it is currently unused and not enforced.
-- The `SIZE` directive controls how much space to allocate to the stack.  
-    - Available values are `1K`, `2K`, `4K`, `8K`, `16K`, `32K`, `64K`, & `128K`.
-    - You must specify whether you want to use `BINARY` (1024) or `DECIMAL` (1000) for your byte sizes.
-- Line numbers must start at `10` and go up by increments of `10`. Failure to do so will lead to a `SyntaxError`.  
-    - They are not required to be zero padded, however you can pad them if you so wish.
-
-The language has no set tab or spacing rules, it is up to you to implement spacing however you see fit.
-
-## Reserved registers
+### Registers
 
 ```js
-&slx    // ERROR CODE OF LAST RAN LINE, 0 IF SUCCESS
-&sly    // RESERVED
-&slz    // RESERVED
+0x0: R1
+0x1: R2
+0x2: R3
+0x3: R4
+0x4: R5
+0x5: R6
+0xA: LC (LINE COUNTER)
+0xB: CR (COMPARE RESULT)
+0xC: SP (STACK POINTER)
+```
+
+### Instructions
+
+```js
+A = CPU REG
+R = MEM ADDR
+
+0x00: HLT     (HALT)
+0x01: LDM R A (LOAD MEMORY)
+0x02: LDI R V (LOAD IMMEDIATE)
+0x03: STR R A (STORE MEMORY)
+0x04: ADD R R (ADD)
+0x05: SUB R R (SUBTRACT)
+0x06: MUL R R (MULTIPLY)
+0x07: DIV R R (DIVIDE)
+0x08: POW R R (POWER)
+0x09: CMP R R (COMPARE)
+0x0A: JEQ A   (JUMP EQUAL)
+0x0B: JNE A   (JUMP NOT EQUAL)
+0x0C: JGT A   (JUMP GREATER THAN)
+0x0D: JLT A   (JUMP LESS THAN)
+0x0E: JGE A   (JUMP GREATER EQUAL)
+0x0F: JLE A   (JUMP LESS EQUAL)
+0x10: JMP A   (JUMP)
+0x11: CAL A   (CALL SUBROUTINE)
+0x12: RET     (RETURN FROM SUBROUTINE)
+0x13: PSH R   (PUSH REGISTER TO STACK)
+0x14: POP R   (POP STACK TO REGISTER)
 ```
 
 ## Inspiration
 
-8255 is inspired by the look and feel of [Pascal](https://en.wikipedia.org/wiki/Pascal_(programming_language)), [BASIC](https://en.wikipedia.org/wiki/BASIC), & [Assembly](https://en.wikipedia.org/wiki/Assembly_language).
+8255 is based on [BASIC](https://en.wikipedia.org/wiki/BASIC), & [Assembly](https://en.wikipedia.org/wiki/Assembly_language).  
+The CPU itself has no real backing inspiration, it's just a normal 16-bit chip w/ RAM.
 
 ## Copyright
 
-© 2024-2025 Benjamin "iiPython" O'Brien, see [LICENSE.txt](LICENSE.txt) for details.
+© 2024-2026 Benjamin "iiPython" O'Brien, see [LICENSE.txt](LICENSE.txt) for details.
