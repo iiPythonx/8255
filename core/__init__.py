@@ -103,5 +103,21 @@ INSTRUCTIONS = {
         [Address("PROGRAM ADDRESS")],
         "JMP",
         "JUMP"
+    ),
+    0x11: Instruction(
+        [Address("PROGRAM ADDRESS")],
+        "CAL",
+        "CALL SUBROUTINE"
+    ),
+    0x12: Instruction([], "RET", "RETURN FROM SUBROUTINE"),
+    0x13: Instruction(
+        [Register("TO PUSH ONTO STACK")],
+        "PSH",
+        "PUSH REGISTER TO STACK"
+    ),
+    0x14: Instruction(
+        [Register("TO POP FROM STACK")],
+        "POP",
+        "POP STACK TO REGISTER"
     )
 }
