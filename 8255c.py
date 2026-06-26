@@ -27,21 +27,20 @@ PRELOAD_REGEX = re.compile(rb"(\w+):\s+\"(.+)\"")
 INSTRUCTS_BY_VERB = {v.opcode: (k, v) for k, v in INSTRUCTIONS.items()}
 
 def generate_preload(section: "Section") -> tuple[bytearray, int]:
-    store, offset = bytearray([0] * (0x4000 - 0x2000 + 1)), 0
+    store, offset = bytearray([0] * (0x3000 - 0x2000)), 0
     for index, line in enumerate(section.lines):
         line_match = PRELOAD_REGEX.match(line.encode() + b"\0")
         if line_match is None:
             raise CompilationError(index, section, "Invalid line inside preload section!")
 
         key, value = line_match.groups()
-        for byte in value:
-            store[offset] = byte
-            offset += 1
+        store[offset : offset + len(value)] = value
+        offset += len(value)
 
     return store, index
 
 def generate_snapshot(sections: dict[str, "Section"]) -> bytearray:
-    components = {"code": [bytearray([0] * (0x2000 - 0x0100 + 1)), 0]}
+    components = {"code": [bytearray([0] * (0x2000 - 0x0100)), 0]}
     def write(item: int | bytes) -> None:
         array, index = components["code"]
         if isinstance(item, int):
@@ -52,8 +51,16 @@ def generate_snapshot(sections: dict[str, "Section"]) -> bytearray:
         array[index : index + len(item)] = item
         components["code"][1] += len(item)
 
+    def log(line: str, total_size: int):
+        current_array, current_index = components["code"]
+        print(f"0x{current_index - total_size:04x} | {line:<30} | {current_array[current_index - total_size:current_index].hex(' ', 1)}")
+
     print(f"OFFSET | {'INSTRUCTION':<30} | BYTECODE")
     print("-" * 80)
+
+    write(INSTRUCTS_BY_VERB["JMP"][0])
+    write(int(0).to_bytes(2))
+    log("jmp &main", 3)
 
     subroutines: dict[str, int] = {}
     for name, section in sections.items():
@@ -102,10 +109,13 @@ def generate_snapshot(sections: dict[str, "Section"]) -> bytearray:
 
                 total_size += argument.size
 
-            current_array, current_index = components["code"]
-            print(f"0x{current_index:04x} | {line:<30} | {current_array[current_index - total_size:current_index].hex(' ', 1)}")
+            log(line, total_size)
 
-    return components["code"][0]
+    # Update zero jump to match correct main address
+    if "main" in subroutines:
+        components["code"][0][1:3] = subroutines["main"].to_bytes(2)
+
+    return components["code"][0] + components.get("data", [bytearray(), 0])[0]
 
 # Parsing
 @dataclass
