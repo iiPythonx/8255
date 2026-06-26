@@ -2,7 +2,7 @@
     <picture>
         <source media = "(prefers-color-scheme: dark)" srcset = ".github/logo_dark.png">
         <source media = "(prefers-color-scheme: light)" srcset = ".github/logo_light.png">
-        <img alt = "8255 logo" src = "/.github/logo_dark.png">
+        <img alt = "8255 logo" src = ".github/logo_dark.png">
     </picture>
     <hr>
 </p>
