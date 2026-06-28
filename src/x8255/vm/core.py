@@ -23,7 +23,6 @@ REG_MAPPING = {
 
 class Emu8255:
     def __init__(self, enabled_drivers: list[str] = ["stdio"]) -> None:
-        self.cycle = 0
         self.memory = bytearray(0x4000)
 
         # Load drivers
@@ -133,8 +132,6 @@ class Emu8255:
         new_current_line = self.read_register(0xA)
         if current_line == new_current_line:
             self.write_register(0xA, new_current_line + read_offset)
-
-        self.cycle += 1
 
     def write_range(self, data: bytes, offset: int) -> None:
         self.memory[offset:offset + len(data)] = data

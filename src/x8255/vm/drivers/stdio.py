@@ -28,9 +28,8 @@
 #   ldm r1, 0x0028  # Grab one character from stdin
 #   ldi r1, 0x0024  # Send ASCII code to stdout
 #
-#   ldi r1, 0x002A  # Request an entire string from stdin
-#                   # Which will be placed into memory, starting at 0x2100
 #   ldi r1, 0x2100  # Set R1 to memory addr 0x2100
+#   str r1, 0x002A  # Request an entire string from stdin
 #   str r1, 0x0022  # Send the entire memory block to the screen
 
 import sys
@@ -79,4 +78,4 @@ class Driver:
 
     def read_stdin_input(self, memory: bytearray, value: int) -> None:
         for index, item in enumerate(input().encode("utf-8") + b"\0"):
-            memory[0x2100 + index] = item
+            memory[value + index] = item
