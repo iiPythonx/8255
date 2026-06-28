@@ -28,97 +28,127 @@ class Instruction:
 INSTRUCTIONS = {
     0x00: Instruction([], "HLT", "HALT"),
     0x01: Instruction(
-        [Register("TO LOAD INTO"), Address("TO LOAD FROM")],
-        "LDM",
-        "LOAD MEMORY"
-    ),
-    0x02: Instruction(
         [Register("TO LOAD INTO"), Value("TO LOAD")],
         "LDI",
         "LOAD IMMEDIATE"
     ),
+    0x02: Instruction(
+        [Register("TO LOAD INTO"), Address("TO LOAD FROM")],
+        "LBA",
+        "LOAD BYTE ADDRESS"
+    ),
     0x03: Instruction(
-        [Register("TO LOAD FROM"), Address("TO LOAD INTO")],
-        "STR",
-        "STORE MEMORY"
+        [Register("TO LOAD INTO"), Register("TO LOAD FROM")],
+        "LBR",
+        "LOAD BYTE REGISTER"
     ),
     0x04: Instruction(
+        [Register("TO LOAD INTO"), Address("TO LOAD FROM")],
+        "LWA",
+        "LOAD WORD ADDRESS"
+    ),
+    0x05: Instruction(
+        [Register("TO LOAD INTO"), Register("TO LOAD FROM")],
+        "LWR",
+        "LOAD WORD REGISTER"
+    ),
+    0x06: Instruction(
+        [Register("TO LOAD FROM"), Address("TO LOAD INTO")],
+        "SBA",
+        "STORE BYTE ADDRESS"
+    ),
+    0x07: Instruction(
+        [Register("TO LOAD FROM"), Register("TO LOAD INTO")],
+        "SBR",
+        "STORE BYTE REGISTER"
+    ),
+    0x08: Instruction(
+        [Register("TO LOAD FROM"), Address("TO LOAD INTO")],
+        "SWA",
+        "STORE WORD ADDRESS"
+    ),
+    0x09: Instruction(
+        [Register("TO LOAD FROM"), Register("TO LOAD INTO")],
+        "SWR",
+        "STORE WORD REGISTER"
+    ),
+    0x0A: Instruction(
         [Register("TO ADD TO"), Register("TO ADD")],
         "ADD",
         "ADD"
     ),
-    0x05: Instruction(
+    0x0B: Instruction(
         [Register("TO SUBTRACT FROM"), Register("TO SUBTRACT")],
         "SUB",
         "SUBTRACT"
     ),
-    0x06: Instruction(
+    0x0C: Instruction(
         [Register("TO MULTIPLY"), Register("TO MULTIPLY BY")],
         "MUL",
         "MULTIPLY"
     ),
-    0x07: Instruction(
+    0x0D: Instruction(
         [Register("TO DIVIDE"), Register("TO DIVIDE BY")],
         "DIV",
         "DIVIDE"
     ),
-    0x08: Instruction(
+    0x0E: Instruction(
         [Register("TO RAISE"), Register("TO RAISE TO")],
         "POW",
         "POWER"
     ),
-    0x09: Instruction(
+    0x0F: Instruction(
         [Register("LEFT COMP"), Register("RIGHT COMP")],
         "CMP",
         "COMPARE"
     ),
-    0x0A: Instruction(
+    0x10: Instruction(
         [Address("PROGRAM ADDRESS")],
         "JEQ",
         "JUMP EQUAL"
     ),
-    0x0B: Instruction(
+    0x11: Instruction(
         [Address("PROGRAM ADDRESS")],
         "JNE",
         "JUMP NOT EQUAL"
     ),
-    0x0C: Instruction(
+    0x12: Instruction(
         [Address("PROGRAM ADDRESS")],
         "JGT",
         "JUMP GREATER THAN"
     ),
-    0x0D: Instruction(
+    0x13: Instruction(
         [Address("PROGRAM ADDRESS")],
         "JLT",
         "JUMP LESS THAN"
     ),
-    0x0E: Instruction(
+    0x14: Instruction(
         [Address("PROGRAM ADDRESS")],
         "JGE",
         "JUMP GREATER EQUAL"
     ),
-    0x0F: Instruction(
+    0x15: Instruction(
         [Address("PROGRAM ADDRESS")],
         "JLE",
         "JUMP LESS EQUAL"
     ),
-    0x10: Instruction(
+    0x16: Instruction(
         [Address("PROGRAM ADDRESS")],
         "JMP",
         "JUMP"
     ),
-    0x11: Instruction(
+    0x17: Instruction(
         [Address("PROGRAM ADDRESS")],
         "CAL",
         "CALL SUBROUTINE"
     ),
-    0x12: Instruction([], "RET", "RETURN FROM SUBROUTINE"),
-    0x13: Instruction(
+    0x18: Instruction([], "RET", "RETURN FROM SUBROUTINE"),
+    0x19: Instruction(
         [Register("TO PUSH ONTO STACK")],
         "PSH",
         "PUSH REGISTER TO STACK"
     ),
-    0x14: Instruction(
+    0x1A: Instruction(
         [Register("TO POP FROM STACK")],
         "POP",
         "POP STACK TO REGISTER"
@@ -132,6 +162,9 @@ REGISTERS = {
     "R4": 0x3,
     "R5": 0x4,
     "R6": 0x5,
+    "R7": 0x6,
+    "R8": 0x7,
+    "R9": 0x8,
     "LC": 0xA,
     "CR": 0xB,
     "SP": 0xC,

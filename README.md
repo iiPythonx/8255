@@ -28,14 +28,14 @@ uv pip install -e .
 ## Features
 
 - Complete [ISA](https://en.wikipedia.org/wiki/Instruction_set_architecture) covering memory operations, math, and branching
-- 6 general purpose registers (R1 - R6) with 3 hardware registers (LC, CR, & SP)
+- 9 general purpose registers (R1 - R9) with 3 hardware registers (LC, CR, & SP)
 - [MMIO](https://en.wikipedia.org/wiki/Memory-mapped_I/O_and_port-mapped_I/O) for [drivers](#drivers) on the 0x0013 - 0x0100 range
 - Subroutine and stack support, including `PSH`, `POP`, `CAL`, & `RET`
 
 ## Specifications
 
-Last updated: JUNE 26, 2026  
-Version: 1.1
+Last updated: June 28th, 2026  
+Version: 1.2
 
 ### Memory
 
@@ -57,6 +57,9 @@ Version: 1.1
 0x3: R4
 0x4: R5
 0x5: R6
+0x6: R7
+0x7: R8
+0x8: R9
 0xA: LC (LINE COUNTER)
 0xB: CR (COMPARE RESULT)
 0xC: SP (STACK POINTER)
@@ -65,30 +68,37 @@ Version: 1.1
 ### Instructions
 
 ```js
-A = CPU REG
-R = MEM ADDR
+R = CPU REG
+A = MEM ADDR
+V = VALUE (ASM EMBEDDED)
 
 0x00: HLT     (HALT)
-0x01: LDM R A (LOAD MEMORY)
-0x02: LDI R V (LOAD IMMEDIATE)
-0x03: STR R A (STORE MEMORY)
-0x04: ADD R R (ADD)
-0x05: SUB R R (SUBTRACT)
-0x06: MUL R R (MULTIPLY)
-0x07: DIV R R (DIVIDE)
-0x08: POW R R (POWER)
-0x09: CMP R R (COMPARE)
-0x0A: JEQ A   (JUMP EQUAL)
-0x0B: JNE A   (JUMP NOT EQUAL)
-0x0C: JGT A   (JUMP GREATER THAN)
-0x0D: JLT A   (JUMP LESS THAN)
-0x0E: JGE A   (JUMP GREATER EQUAL)
-0x0F: JLE A   (JUMP LESS EQUAL)
-0x10: JMP A   (JUMP)
-0x11: CAL A   (CALL SUBROUTINE)
-0x12: RET     (RETURN FROM SUBROUTINE)
-0x13: PSH R   (PUSH REGISTER TO STACK)
-0x14: POP R   (POP STACK TO REGISTER)
+0x01: LDI R V (LOAD IMMEDIATE)
+0x02: LBA A A (LOAD BYTE ADDRESS)
+0x03: LBR R R (LOAD BYTE REGISTER)
+0x04: LWA A A (LOAD WORD ADDRESS)
+0x05: LWR R R (LOAD WORD REGISTER)
+0x06: SBA A A (STORE BYTE ADDRESS)
+0x07: SBR R R (STORE BYTE REGISTER)
+0x08: SWA A A (STORE WORD ADDRESS)
+0x09: SWR R R (STORE WORD REGISTER)
+0x0A: ADD R R (ADD)
+0x0B: SUB R R (SUBTRACT)
+0x0C: MUL R R (MULTIPLY)
+0x0D: DIV R R (DIVIDE)
+0x0E: POW R R (POWER)
+0x0F: CMP R R (COMPARE)
+0x10: JEQ A   (JUMP EQUAL)
+0x11: JNE A   (JUMP NOT EQUAL)
+0x12: JGT A   (JUMP GREATER THAN)
+0x13: JLT A   (JUMP LESS THAN)
+0x14: JGE A   (JUMP GREATER EQUAL)
+0x15: JLE A   (JUMP LESS EQUAL)
+0x16: JMP A   (JUMP)
+0x17: CAL A   (CALL SUBROUTINE)
+0x18: RET     (RETURN FROM SUBROUTINE)
+0x19: PSH R   (PUSH REGISTER TO STACK)
+0x1A: POP R   (POP STACK TO REGISTER)
 ```
 
 ### Drivers

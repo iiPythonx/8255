@@ -7,7 +7,7 @@
     ldi r2, 1970
     sub r1, r2
     ldi r3, &a
-    str r3, 0x0022
-    str r1, 0x0024
+    swa r3, 0x0022
+    swa r1, 0x0024
     ldi r3, &b
-    str r3, 0x0022
+    swa r3, 0x0022

@@ -13,9 +13,12 @@ REG_MAPPING = {
     0x3: 0x06,
     0x4: 0x08,
     0x5: 0x0A,
-    0xA: 0x0C,
-    0xB: 0x0E,
-    0xC: 0x10
+    0x6: 0x0C,
+    0x7: 0x0E,
+    0x8: 0x10,
+    0xA: 0x12,
+    0xB: 0x14,
+    0xC: 0x16
 }
 
 class Emu8255:
@@ -85,17 +88,24 @@ class Emu8255:
             case "RET":
                 self.write_register(0xA, self.pop_stack())
 
-            case "STR":
-                offset, value = arguments[1], self.read_register(arguments[0])
-                if not self.drivers.on_write(offset, value):
-                    self.memory[offset:offset + 2] = value.to_bytes(2)
+            case "LBA" | "LBR" | "LWA" | "LWR" as op:
+                offset, data_size = arguments[1], 1 if op[1] == "B" else 2
+                if op[2] == "R":
+                    offset = self.read_register(offset)
 
-            case "LDM":
-                offset = arguments[1]
                 self.write_register(
                     arguments[0],
-                    self.drivers.on_read(offset) or int.from_bytes(self.memory[offset:offset + 2])
+                    self.drivers.on_read(offset) or int.from_bytes(self.memory[offset:offset + data_size])
                 )
+
+            case "SBA" | "SBR" | "SWA" | "SWR" as op:
+                offset, data_size = arguments[1], 1 if op[1] == "B" else 2
+                if op[2] == "R":
+                    offset = self.read_register(offset)
+
+                value = self.read_register(arguments[0])
+                if not self.drivers.on_write(offset, value):
+                    self.memory[offset:offset + data_size] = value.to_bytes(data_size)
 
             case "CMP":
                 left, right = self.read_register(arguments[0]), self.read_register(arguments[1])
