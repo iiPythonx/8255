@@ -2,9 +2,7 @@
 
 # Modules
 import re
-from sys import argv
 from pathlib import Path
-from time import perf_counter
 from dataclasses import dataclass
 
 from core import INSTRUCTIONS, REGISTERS
@@ -15,7 +13,7 @@ class CompilationError(Exception):
         target_line = offset + section.start
         target_code = section.file.lines[target_line]
         
-        print(f"\033[31m8255c: compilation issue")
+        print("\033[31m8255c: compilation issue")
         print("=" * 50, end = "\033[0m\n\n")
         print(f"\033[90mLine \033[33m{target_line}\033[90m in \033[33m{section.file.path}\033[90m is invalid:")
         print(f"  > \033[33m{target_code}\033[31m\n")
@@ -26,8 +24,8 @@ class CompilationError(Exception):
 PRELOAD_REGEX = re.compile(rb"(\w+):\s+\"(.+)\"")
 INSTRUCTS_BY_VERB = {v.opcode: (k, v) for k, v in INSTRUCTIONS.items()}
 
-def generate_preload(section: "Section") -> tuple[tuple[bytearray, int], dict[str, int]]:
-    store, offset, strmap = bytearray([0] * (0x3000 - 0x2000)), 0, {}
+def generate_preload(section: "Section") -> tuple[list[bytearray | int], dict[str, int]]:
+    store, offset, strmap, index = bytearray([0] * (0x3000 - 0x2000)), 0, {}, 0
     for index, line in enumerate(section.lines):
         line_match = PRELOAD_REGEX.match(line.encode())
         if line_match is None:
@@ -42,7 +40,7 @@ def generate_preload(section: "Section") -> tuple[tuple[bytearray, int], dict[st
         store[offset : offset + len(value)] = value.decode("unicode-escape").encode("utf-8")
         offset += len(value)
 
-    return (store, index), strmap
+    return [store, index], strmap
 
 def generate_snapshot(sections: dict[str, "Section"], zero_jump: bool = False) -> bytearray:
     components, strmap = {"code": [bytearray([0] * (0x2000 - 0x0100)), 0]}, {}
@@ -81,7 +79,7 @@ def generate_snapshot(sections: dict[str, "Section"], zero_jump: bool = False) -
 
             # Ensure instruction is valid
             id, instruction = INSTRUCTS_BY_VERB.get(instruction.upper()) or (None, None)
-            if instruction is None:
+            if instruction is None or id is None:
                 raise CompilationError(index, section, "Invalid instruction!")
 
             write(id)
@@ -159,7 +157,7 @@ def parse_sections_from_file(path: Path) -> dict[str, Section]:
             push_section()
             active_section = Section(line[1:], index + 1, 0, file, [])
 
-        else:
+        elif active_section:
 
             # TODO: This is naive. In the future we need to split only if the found
             # substring isn't inside a string block. i.e. a preload section.

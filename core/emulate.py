@@ -2,8 +2,6 @@
 
 # Modules
 import operator
-from sys import argv
-from pathlib import Path
 
 from core import INSTRUCTIONS
 from core.drivers import DriverManager
