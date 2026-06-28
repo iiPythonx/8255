@@ -20,6 +20,13 @@ python3 -m core assemble examples/epoch.asm
 python3 -m core run examples/epoch.bin
 ```
 
+## Features
+
+- Complete [ISA](https://en.wikipedia.org/wiki/Instruction_set_architecture) covering memory operations, math, and branching
+- 6 general purpose registers (R1 - R6) with 3 hardware registers (LC, CR, & SP)
+- [MMIO](https://en.wikipedia.org/wiki/Memory-mapped_I/O_and_port-mapped_I/O) for [drivers](#drivers) on the 0x0013 - 0x0100 range
+- Subroutine and stack support, including `PSH`, `POP`, `CAL`, & `RET`
+
 ## Specifications
 
 Last updated: JUNE 26, 2026  
