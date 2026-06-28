@@ -3,7 +3,10 @@
 import typing
 import importlib
 
-ENABLED_DRIVERS = [("stdio", "STDIODriver")]
+ENABLED_DRIVERS = [
+    ("stdio", "STDIODriver"),
+    ("random", "RandomDriver")
+]
 
 class DriverManager:
     def __init__(self, emulator: "Emu8255") -> None:
