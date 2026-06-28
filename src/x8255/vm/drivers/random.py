@@ -18,7 +18,7 @@
 
 import random
 
-from core.drivers import DriverManager
+from x8255.vm.drivers import DriverManager
 
 class RandomDriver:
     def __init__(self, core: DriverManager) -> None:

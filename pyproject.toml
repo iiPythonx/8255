@@ -1,0 +1,11 @@
+[project]
+name = "x8255"
+version = "1.1.0"
+description = "A 16-bit CPU with 16 KiB of RAM."
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[project.scripts]
+8255emu = "x8255.vm.__main__:main"
+8255asm = "x8255.asm.__main__:main"

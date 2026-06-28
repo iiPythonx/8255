@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 from dataclasses import dataclass
 
-from core import INSTRUCTIONS, REGISTERS
+from x8255.isa import INSTRUCTIONS, REGISTERS
 
 # Exceptions
 class CompilationError(Exception):

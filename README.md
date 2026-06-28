@@ -15,9 +15,14 @@ A 16-bit CPU with 16 KiB of RAM, for playing around with.
 git clone git@github.com:iiPythonx/8255
 cd 8255
 
+# Activate environment
+uv venv
+source .venv/bin/activate
+uv pip install -e .
+
 # Run the UNIX epoch example
-python3 -m core assemble examples/epoch.asm
-python3 -m core run examples/epoch.bin
+8255asm examples/epoch.asm
+8255emu examples/epoch.bin
 ```
 
 ## Features
@@ -88,7 +93,7 @@ R = MEM ADDR
 
 ### Drivers
 
-See the [core/drivers](./core/drivers) tree for a list of drivers.  
+See the [vm/drivers](./src/x8255/vm/drivers) tree for a list of drivers.  
 It's up to the driver maintainer to produce accurate documentation regarding their use.
 
 ## Inspiration

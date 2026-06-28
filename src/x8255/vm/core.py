@@ -3,8 +3,8 @@
 # Modules
 import operator
 
-from core import INSTRUCTIONS
-from core.drivers import DriverManager
+from x8255.isa import INSTRUCTIONS
+from x8255.vm.drivers import DriverManager
 
 MEM_CODE_RANGE = (0x0100, 0x2000)
 MEM_STACK_RANGE = (0x3000, 0x4000)
@@ -25,7 +25,9 @@ class Emu8255:
     def __init__(self) -> None:
         self.cycle = 0
         self.memory = bytearray(0x4000)
-        self.drivers = DriverManager(self)
+
+        # Load drivers
+        self.drivers = DriverManager(self.memory)
 
     def read_register(self, register_id: int) -> int:
         offset = REG_MAPPING[register_id]
@@ -46,17 +48,6 @@ class Emu8255:
         stack_offset = MEM_STACK_RANGE[1] - existing_offset
         self.write_register(0xC, existing_offset)
         return int.from_bytes(self.memory[stack_offset:stack_offset + 2])
-
-    def step_screen(self) -> None:
-        print(f"SYSTEM STEP! CYCLE {self.cycle}\n")
-        for _ in range(5):
-            print(f"R{_ + 1}: {str(self.read_register(_)):<5}", end = " " + ("| " if _ < 4 else ""))
-
-        print()
-        for _, r in enumerate(("LC", "CR", "SP")):
-            print(f"{r}: {str(self.read_register(0xA + _)):<5}", end = " " + ("| " if _ < 2 else ""))
-
-        print("\n")
 
     def step(self) -> None:
         current_line = self.read_register(0xA)

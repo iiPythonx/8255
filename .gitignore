@@ -1,4 +1,6 @@
 __pycache__/
+build/
+*.egg-info
 *.asm
 *.bin
 !examples/*.asm

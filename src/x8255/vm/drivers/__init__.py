@@ -9,8 +9,8 @@ ENABLED_DRIVERS = [
 ]
 
 class DriverManager:
-    def __init__(self, emulator: "Emu8255") -> None:
-        self.memory = emulator.memory
+    def __init__(self, memory: bytearray) -> None:
+        self.memory = memory
 
         # Mappings
         self.read_mapping: dict[int, typing.Callable] = {}
@@ -18,7 +18,7 @@ class DriverManager:
 
         # Begin initializing drivers
         for package, driver in ENABLED_DRIVERS:
-            getattr(importlib.import_module(f".{package}", package = "core.drivers"), driver)(self)
+            getattr(importlib.import_module(f"x8255.vm.drivers.{package}"), driver)(self)
 
     def bind_write(self, address: int, callback: typing.Callable) -> None:
         self.write_mapping[address] = callback

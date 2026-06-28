@@ -37,7 +37,7 @@ import sys
 import tty
 import termios
 
-from core.drivers import DriverManager
+from x8255.vm.drivers import DriverManager
 
 class STDIODriver:
     def __init__(self, core: DriverManager) -> None:
