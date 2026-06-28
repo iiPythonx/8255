@@ -20,7 +20,7 @@ import random
 
 from x8255.vm.drivers import DriverManager
 
-class RandomDriver:
+class Driver:
     def __init__(self, core: DriverManager) -> None:
         core.bind_read(0x0030, self.read_random)
         core.bind_write(0x0032, self.write_upper_bound)

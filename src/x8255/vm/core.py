@@ -19,12 +19,12 @@ REG_MAPPING = {
 }
 
 class Emu8255:
-    def __init__(self) -> None:
+    def __init__(self, enabled_drivers: list[str] = ["stdio"]) -> None:
         self.cycle = 0
         self.memory = bytearray(0x4000)
 
         # Load drivers
-        self.drivers = DriverManager(self.memory)
+        self.drivers = DriverManager(self.memory, enabled_drivers)
 
     def read_register(self, register_id: int) -> int:
         offset = REG_MAPPING[register_id]

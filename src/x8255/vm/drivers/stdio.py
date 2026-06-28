@@ -39,7 +39,7 @@ import termios
 
 from x8255.vm.drivers import DriverManager
 
-class STDIODriver:
+class Driver:
     def __init__(self, core: DriverManager) -> None:
         core.bind_write(0x0020, self.write_character)
         core.bind_write(0x0022, self.write_string)

@@ -3,13 +3,10 @@
 import typing
 import importlib
 
-ENABLED_DRIVERS = [
-    ("stdio", "STDIODriver"),
-    ("random", "RandomDriver")
-]
+from x8255.cli import cexit
 
 class DriverManager:
-    def __init__(self, memory: bytearray) -> None:
+    def __init__(self, memory: bytearray, enabled_drivers: list[str]) -> None:
         self.memory = memory
 
         # Mappings
@@ -17,8 +14,17 @@ class DriverManager:
         self.write_mapping: dict[int, typing.Callable] = {}
 
         # Begin initializing drivers
-        for package, driver in ENABLED_DRIVERS:
-            getattr(importlib.import_module(f"x8255.vm.drivers.{package}"), driver)(self)
+        for package in enabled_drivers:
+            try:
+                module = importlib.import_module(f"x8255.vm.drivers.{package}")
+                driver = getattr(module, "Driver")
+                if driver is None:
+                    return cexit(f"Attempted to load driver '{package}', but it has no Driver class!")
+
+                driver(self)
+
+            except ModuleNotFoundError:
+                cexit(f"Attempted to load driver '{package}', but it was not found!")
 
     def bind_write(self, address: int, callback: typing.Callable) -> None:
         self.write_mapping[address] = callback
