@@ -21,7 +21,9 @@ class CompilationError(Exception):
         exit(1)
 
 # Compilation
-PRELOAD_REGEX = re.compile(rb"(\w+):\s+\"(.+)\"")
+PRELOAD_REGEX = re.compile(rb"\.(\w+)\s+\"(.+)\"")
+LABEL_REGEX = re.compile(r"^\w+\:")
+
 INSTRUCTS_BY_VERB = {v.opcode: (k, v) for k, v in INSTRUCTIONS.items()}
 
 def generate_preload(section: "Section") -> tuple[list[bytearray | int], dict[str, int]]:
@@ -89,24 +91,21 @@ def generate_snapshot(sections: dict[str, "Section"], zero_jump: bool = False) -
             for aindex, argument in enumerate(instruction.args):
                 target = arguments[aindex]
                 if argument.size == 2:
-
-                    # This should either be a memory address (preferred), or a
-                    # direct value (loadi), or lastly a subroutine address
-                    if target.startswith("&"):
-                        if target[1:] in strmap:
-                            write(strmap[target[1:]].to_bytes(2))
-
-                        else:
-                            if target[1:] not in subroutines:
-                                raise CompilationError(index, section, "Reference to unknown subroutine!")
-
-                            write(subroutines[target[1:]].to_bytes(2))
-                        
-                    elif target.startswith("0x"):
+                    if target.startswith("0x"):
                         write(int(target, 16).to_bytes(2))
 
+                    elif target.startswith("&") and target[1:] in strmap:
+                        write(strmap[target[1:]].to_bytes(2))
+
                     else:
-                        write(int(target).to_bytes(2))
+                        try:
+                            write(int(target).to_bytes(2))
+
+                        except ValueError:
+                            if target not in subroutines:
+                                raise CompilationError(index, section, "Reference to unknown subroutine!")
+
+                            write(subroutines[target].to_bytes(2))
 
                 elif argument.size == 1:
                     register_id = REGISTERS[target.upper()]
@@ -150,18 +149,18 @@ def parse_sections_from_file(path: Path) -> dict[str, Section]:
 
     file = File(path, [line.strip() for line in path.read_text().splitlines() if line.strip()])
     for index, line in enumerate(file.lines):
-        if line.startswith("//"):
+        if line.startswith(";"):
             continue
 
-        if line[0] == ".":
+        if LABEL_REGEX.match(line):
             push_section()
-            active_section = Section(line[1:], index + 1, 0, file, [])
+            active_section = Section(line[:-1], index + 1, 0, file, [])
 
         elif active_section:
 
             # TODO: This is naive. In the future we need to split only if the found
             # substring isn't inside a string block. i.e. a preload section.
-            active_section.lines.append(line.split("//")[0].strip())
+            active_section.lines.append(line.split(";")[0].strip())
 
     push_section()
     return sections
