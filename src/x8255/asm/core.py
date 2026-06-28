@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 from dataclasses import dataclass
 
-from x8255.isa import INSTRUCTIONS, REGISTERS
+from x8255.isa import INSTRUCTIONS, REGISTERS, Addresses
 
 # Exceptions
 class CompilationError(Exception):
@@ -25,7 +25,7 @@ PRELOAD_REGEX = re.compile(rb"(\w+):\s+\"(.+)\"")
 INSTRUCTS_BY_VERB = {v.opcode: (k, v) for k, v in INSTRUCTIONS.items()}
 
 def generate_preload(section: "Section") -> tuple[list[bytearray | int], dict[str, int]]:
-    store, offset, strmap, index = bytearray([0] * (0x3000 - 0x2000)), 0, {}, 0
+    store, offset, strmap, index = bytearray([0] * Addresses.DATA.size), 0, {}, 0
     for index, line in enumerate(section.lines):
         line_match = PRELOAD_REGEX.match(line.encode())
         if line_match is None:
@@ -33,7 +33,7 @@ def generate_preload(section: "Section") -> tuple[list[bytearray | int], dict[st
 
         # Store in string mapping
         key, value = line_match.groups()
-        strmap[key.decode()] = 0x2000 + offset
+        strmap[key.decode()] = Addresses.DATA.start + offset
 
         # Place in block
         value += b"\0"
@@ -43,7 +43,7 @@ def generate_preload(section: "Section") -> tuple[list[bytearray | int], dict[st
     return [store, index], strmap
 
 def generate_snapshot(sections: dict[str, "Section"], zero_jump: bool = False) -> bytearray:
-    components, strmap = {"code": [bytearray([0] * (0x2000 - 0x0100)), 0]}, {}
+    components, strmap = {"code": [bytearray([0] * Addresses.CODE.size), 0]}, {}
     def write(item: int | bytes) -> None:
         array, index = components["code"]
         if isinstance(item, int):

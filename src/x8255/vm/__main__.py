@@ -3,9 +3,8 @@
 from pathlib import Path
 
 from x8255.cli import p, cexit
+from x8255.isa import Addresses
 from x8255.vm.core import Emu8255
-
-CODE_SECTION_RANGE = 0x2000 - 0x0100
 
 def main() -> None:
     p.add_argument("executable", type = Path, help = "path to compiled executable")
@@ -19,8 +18,8 @@ def main() -> None:
 
     # Setup emulation
     system = Emu8255()
-    system.write_range(bytecode[:CODE_SECTION_RANGE], 0x0100)
-    system.write_range(bytecode[CODE_SECTION_RANGE:], 0x2000)
+    system.write_range(bytecode[:Addresses.CODE.size], Addresses.CODE.start)
+    system.write_range(bytecode[Addresses.CODE.size:], Addresses.CODE.end)
 
     # System loop
     while True:

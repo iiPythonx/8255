@@ -136,3 +136,13 @@ REGISTERS = {
     "CR": 0xB,
     "SP": 0xC,
 }
+
+class MemoryAddress:
+    def __init__(self, start: int, end: int) -> None:
+        self.start, self.end, self.size = start, end, end - start
+
+class Addresses:
+    REGISTERS = MemoryAddress(0x0000, 0x0100)
+    CODE      = MemoryAddress(0x0100, 0x2000)
+    DATA      = MemoryAddress(0x2000, 0x3000)
+    STACK     = MemoryAddress(0x3000, 0x4000)

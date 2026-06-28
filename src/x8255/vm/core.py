@@ -3,11 +3,8 @@
 # Modules
 import operator
 
-from x8255.isa import INSTRUCTIONS
+from x8255.isa import INSTRUCTIONS, Addresses
 from x8255.vm.drivers import DriverManager
-
-MEM_CODE_RANGE = (0x0100, 0x2000)
-MEM_STACK_RANGE = (0x3000, 0x4000)
 
 REG_MAPPING = {
     0x0: 0x00,
@@ -39,13 +36,13 @@ class Emu8255:
 
     def push_stack(self, value: int) -> None:
         existing_offset = self.read_register(0xC)
-        stack_offset = MEM_STACK_RANGE[1] - existing_offset
+        stack_offset = Addresses.STACK.end - existing_offset
         self.memory[stack_offset:stack_offset + 2] = value.to_bytes(2)
         self.write_register(0xC, existing_offset + 2)
 
     def pop_stack(self) -> int:
         existing_offset = self.read_register(0xC) - 2
-        stack_offset = MEM_STACK_RANGE[1] - existing_offset
+        stack_offset = Addresses.STACK.end - existing_offset
         self.write_register(0xC, existing_offset)
         return int.from_bytes(self.memory[stack_offset:stack_offset + 2])
 
@@ -53,7 +50,7 @@ class Emu8255:
         current_line = self.read_register(0xA)
 
         # Fetch next instruction
-        offset = MEM_CODE_RANGE[0] + current_line
+        offset = Addresses.CODE.start + current_line
         instruction = INSTRUCTIONS[self.memory[offset]]
 
         # Read arguments
