@@ -81,7 +81,7 @@ class Emu8255:
                 self.write_register(0xA, arguments[0])
 
             case "CAL":
-                self.push_stack(self.read_register(0xA) + 1)
+                self.push_stack(self.read_register(0xA) + read_offset)
                 self.write_register(0xA, arguments[0])
 
             case "RET":
