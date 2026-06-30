@@ -21,6 +21,8 @@ class Debugger:
         self.stdout = sys.stdout
         self.stdout_store = io.StringIO()
 
+    def init(self) -> None:
+        self.show_interface()
         sys.stdout = self.stdout_store
 
     def write(self, text: str = "", **kwargs) -> None:
@@ -40,8 +42,8 @@ class Debugger:
         for _ in range(6):
             instruction = INSTRUCTIONS.get(self.memory[offset], None)
             if instruction is None:
-                print("???")
-                break
+                self.write(f" \033[31m0x{offset:04x} ???\033[0m")
+                continue
 
             self.write(f"\033[{32 if not _ else 90}m ", end = "")
             self.write(f"0x{offset:04x} {instruction.opcode}", end = " ")

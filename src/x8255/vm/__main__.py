@@ -46,6 +46,9 @@ def main() -> None:
     system.write_range(bytecode[:Addresses.CODE.size], Addresses.CODE.start)
     system.write_range(bytecode[Addresses.CODE.size:], Addresses.CODE.end)
 
+    if system.enable_debugger:
+        system.debugger.init()
+
     # System loop
     delay = 1 / speed if speed != 0 else 0
     while True:
