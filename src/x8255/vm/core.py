@@ -4,37 +4,28 @@
 import operator
 
 from x8255.cli import cexit
-from x8255.isa import INSTRUCTIONS, Addresses
+from x8255.isa import INSTRUCTIONS, Addresses, REGISTER_MAPPING
 from x8255.vm.drivers import DriverManager
-
-REG_MAPPING = {
-    0x0: 0x00,
-    0x1: 0x02,
-    0x2: 0x04,
-    0x3: 0x06,
-    0x4: 0x08,
-    0x5: 0x0A,
-    0x6: 0x0C,
-    0x7: 0x0E,
-    0x8: 0x10,
-    0xA: 0x12,
-    0xB: 0x14,
-    0xC: 0x16
-}
+from x8255.vm.debugger import Debugger
 
 class Emu8255:
-    def __init__(self, enabled_drivers: list[str] = ["stdio"]) -> None:
+    def __init__(self, enabled_drivers: list[str] = ["stdio"], enable_debugger: bool = False) -> None:
         self.memory = bytearray(0x4000)
+
+        # Initialize debugger
+        self.enable_debugger = enable_debugger
+        if self.enable_debugger:
+            self.debugger = Debugger(self.memory)
 
         # Load drivers
         self.drivers = DriverManager(self.memory, enabled_drivers)
 
     def read_register(self, register_id: int) -> int:
-        offset = REG_MAPPING[register_id]
+        offset = REGISTER_MAPPING[register_id]
         return int.from_bytes(self.memory[offset:offset + 2])
 
     def write_register(self, register_id: int, value: int) -> None:
-        offset = REG_MAPPING[register_id]
+        offset = REGISTER_MAPPING[register_id]
         self.memory[offset:offset + 2] = value.to_bytes(2)
 
     def push_stack(self, value: int) -> None:
@@ -137,6 +128,9 @@ class Emu8255:
         new_current_line = self.read_register(0xA)
         if current_line == new_current_line:
             self.write_register(0xA, new_current_line + read_offset)
+
+        if self.enable_debugger:
+            self.debugger.step()
 
     def write_range(self, data: bytes, offset: int) -> None:
         self.memory[offset:offset + len(data)] = data

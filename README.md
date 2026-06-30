@@ -132,6 +132,12 @@ If you choose to add a `terminate` label to your code, it will automatically hav
 
 This block is read when CTRL+C is pressed, and the CPU will immediately jump to whatever instructions are stored there. This does mean you need to manually call `HLT` to stop execution though.
 
+## Debugger
+
+Run `8255emu` with the `--debug` (or `-D`) option to enable the built-in system debugger.
+
+![8255 debugger](.github/debugger.png)
+
 ## Inspiration
 
 8255 is based on [BASIC](https://en.wikipedia.org/wiki/BASIC) and [Assembly](https://en.wikipedia.org/wiki/Assembly_language).  

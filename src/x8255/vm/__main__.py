@@ -12,6 +12,7 @@ def main() -> None:
     p.add_argument("-N", "--no-drivers", action = "store_true", help = "disable all drivers", default = False)
     p.add_argument("-d", "--drivers", help = "enabled list of drivers, default: stdio", default = "stdio")
     p.add_argument("-s", "--speed", type = int, help = "emulation speed in hertz, default: no limit", default = 0)
+    p.add_argument("-D", "--debug", action = "store_true", help = "enable the debugger", default = False)
     p.add_argument("executable", type = Path, help = "path to compiled executable")
 
     args = p.parse_args()
@@ -37,7 +38,11 @@ def main() -> None:
         cexit("Provided speed argument is negative and thus invalid.")
 
     # Setup emulation
-    system = Emu8255(args.drivers.split(",") if not args.no_drivers else [])
+    system = Emu8255(
+        enabled_drivers = args.drivers.split(",") if not args.no_drivers else [],
+        enable_debugger = args.debug
+    )
+
     system.write_range(bytecode[:Addresses.CODE.size], Addresses.CODE.start)
     system.write_range(bytecode[Addresses.CODE.size:], Addresses.CODE.end)
 
@@ -46,8 +51,8 @@ def main() -> None:
     while True:
         try:
             system.step()
+            sleep(delay)
 
         except KeyboardInterrupt:
             system.terminate()
 
-        sleep(delay)
