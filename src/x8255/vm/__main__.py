@@ -1,5 +1,6 @@
 # Copyright (c) 2026 iiPython
 
+import gzip
 from time import sleep
 from pathlib import Path
 
@@ -21,6 +22,10 @@ def main() -> None:
         cexit("The provided file path does not exist.")
 
     bytecode = file.read_bytes()
+
+    # Handle decompression
+    if bytecode[:2] == b"\x1f\x8b":
+        bytecode = gzip.decompress(bytecode)
 
     # Confirm speed
     speed = args.speed

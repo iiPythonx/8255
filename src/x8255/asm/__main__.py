@@ -1,5 +1,6 @@
 # Copyright (c) 2026 iiPython
 
+import gzip
 from pathlib import Path
 from time import perf_counter
 
@@ -8,6 +9,7 @@ from x8255.asm.core import parse_sections_from_file, generate_snapshot
 
 def main() -> None:
     p.add_argument("source", type = Path, help = "path to source code")
+    p.add_argument("-G", "--gzip", action = "store_true", default = False, help = "compress output with gzip")
     p.add_argument("-Z", "--zero-jump", action = "store_true", default = False, help = "auto jump to the .main label on launch")
     args = p.parse_args()
 
@@ -26,6 +28,10 @@ def main() -> None:
         zero_jump = args.zero_jump
     )
     elapsed = perf_counter() - start_time
+
+    # Compression
+    if args.gzip:
+        snapshot = gzip.compress(snapshot)
 
     # Write to binary file and show status
     file.with_suffix(".bin").write_bytes(snapshot)
