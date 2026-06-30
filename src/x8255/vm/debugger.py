@@ -5,7 +5,9 @@ import sys
 import time
 from itertools import batched
 
-from x8255.isa import INSTRUCTIONS, REGISTER_MAPPING, Addresses
+from x8255.isa import INSTRUCTIONS, REGISTERS, Addresses
+
+REGISTERS_BY_NAME = {reg.name: reg for reg in REGISTERS}
 
 class Debugger:
     def __init__(self, memory: bytearray) -> None:
@@ -35,7 +37,7 @@ class Debugger:
         self.print_label("INSTRUCTIONS")
 
         # Read current line
-        offset = REGISTER_MAPPING[0xA]
+        offset = REGISTERS_BY_NAME["LC"].address
         offset = Addresses.CODE.start + int.from_bytes(self.memory[offset:offset + 2])
 
         # Fetch instruction
@@ -57,7 +59,7 @@ class Debugger:
                 self.write(f"0x{value:04x}", end = " ")
                 arg_offset += arg.size
 
-            self.write(f"\033[0m")
+            self.write("\033[0m")
             offset += arg_offset
 
         print()
@@ -74,7 +76,7 @@ class Debugger:
 
         print("\033[9A", end = "")
         for index, register in enumerate(("LC", "CR", "SP")):
-            offset = REGISTER_MAPPING[0xA] + (index * 2)
+            offset = REGISTERS_BY_NAME["LC"].address + (index * 2)
             print(f"\033[10C{register}: {register_value(offset)}")
 
     def print_stdout(self) -> None:
@@ -97,7 +99,7 @@ class Debugger:
             self.steps = int(steps)
 
     def show_interface(self) -> None:
-        print(f"\033[2J\033[H", end = "")
+        print("\033[2J\033[H", end = "")
 
         # Printing
         self.print_instructions()
@@ -113,6 +115,7 @@ class Debugger:
             self.print_console()
 
         except KeyboardInterrupt:
+            print("\033[2J\033[H", end = "")
             exit()
 
     def step(self) -> None:

@@ -34,7 +34,7 @@ uv pip install -e .
 
 ## Specifications
 
-Last updated: June 28th, 2026  
+Last updated: June 30th, 2026  
 Version: 1.2.1
 
 ### Memory
@@ -134,7 +134,7 @@ This block is read when CTRL+C is pressed, and the CPU will immediately jump to 
 
 ## Debugger
 
-Run `8255emu` with the `--debug` (or `-D`) option to enable the built-in system debugger.
+Run `8255emu` with the `-D` (`--debug`) option to enable the built-in system debugger.
 
 ![8255 debugger](.github/debugger.png)
 

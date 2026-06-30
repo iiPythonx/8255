@@ -3,7 +3,7 @@ name = "x8255"
 version = "1.2.1"
 description = "A 16-bit CPU with 16 KiB of RAM."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = []
 
 [project.scripts]

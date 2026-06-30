@@ -4,9 +4,11 @@
 import operator
 
 from x8255.cli import cexit
-from x8255.isa import INSTRUCTIONS, Addresses, REGISTER_MAPPING
+from x8255.isa import INSTRUCTIONS, REGISTERS, Addresses
 from x8255.vm.drivers import DriverManager
 from x8255.vm.debugger import Debugger
+
+REGISTERS_BY_ID = {reg.id: reg for reg in REGISTERS}
 
 class Emu8255:
     def __init__(self, enabled_drivers: list[str] = ["stdio"], enable_debugger: bool = False) -> None:
@@ -21,11 +23,11 @@ class Emu8255:
         self.drivers = DriverManager(self.memory, enabled_drivers)
 
     def read_register(self, register_id: int) -> int:
-        offset = REGISTER_MAPPING[register_id]
+        offset = REGISTERS_BY_ID[register_id].address
         return int.from_bytes(self.memory[offset:offset + 2])
 
     def write_register(self, register_id: int, value: int) -> None:
-        offset = REGISTER_MAPPING[register_id]
+        offset = REGISTERS_BY_ID[register_id].address
         self.memory[offset:offset + 2] = value.to_bytes(2)
 
     def push_stack(self, value: int) -> None:

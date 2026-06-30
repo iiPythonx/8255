@@ -32,6 +32,7 @@ class CompilationError(Exception):
 PRELOAD_REGEX = re.compile(rb"\.(\w+)\s+\"(.+)\"")
 LABEL_REGEX = re.compile(r"^\w+\:")
 
+REGISTERS_BY_NAME = {reg.name: reg for reg in REGISTERS}
 INSTRUCTS_BY_VERB = {v.opcode: (k, v) for k, v in INSTRUCTIONS.items()}
 
 def generate_preload(section: "Section") -> tuple[Component, dict[str, int]]:
@@ -116,11 +117,11 @@ def generate_snapshot(sections: dict[str, "Section"], zero_jump: bool = False) -
                             write(subroutines[target].to_bytes(2))
 
                 elif argument.size == 1:
-                    register_id = REGISTERS[target.upper()]
+                    register_id = REGISTERS_BY_NAME[target.upper()]
                     if register_id is None:
                         raise CompilationError(index, section, "Reference to unknown register!")
 
-                    write(register_id)
+                    write(register_id.id)
 
                 total_size += argument.size
 
