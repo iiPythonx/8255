@@ -2,6 +2,7 @@
 
 import io
 import sys
+import time
 from itertools import batched
 
 from x8255.isa import INSTRUCTIONS, REGISTER_MAPPING, Addresses
@@ -12,6 +13,9 @@ class Debugger:
 
         # Handle autostepping
         self.steps = 0
+
+        # Disable time.sleep (since our stepping is slow anyway)
+        time.sleep = lambda _: None
 
         # Handle stdout redirection
         self.stdout = sys.stdout
