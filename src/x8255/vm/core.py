@@ -3,6 +3,7 @@
 # Modules
 import operator
 
+from x8255.cli import cexit
 from x8255.isa import INSTRUCTIONS, Addresses
 from x8255.vm.drivers import DriverManager
 
@@ -53,7 +54,11 @@ class Emu8255:
 
         # Fetch next instruction
         offset = Addresses.CODE.start + current_line
-        instruction = INSTRUCTIONS[self.memory[offset]]
+        opcode = self.memory[offset]
+        if opcode not in INSTRUCTIONS:
+            return cexit(f"Invalid instruction {hex(opcode)} at {hex(offset)}!")
+
+        instruction = INSTRUCTIONS[opcode]
 
         # Read arguments
         read_offset, arguments = 1, []

@@ -25,7 +25,11 @@ def main() -> None:
 
     # Handle decompression
     if bytecode[:2] == b"\x1f\x8b":
-        bytecode = gzip.decompress(bytecode)
+        try:
+            bytecode = gzip.decompress(bytecode)
+
+        except gzip.BadGzipFile:
+            cexit("Gzip decompression failed! Is the file corrupted?")
 
     # Confirm speed
     speed = args.speed
