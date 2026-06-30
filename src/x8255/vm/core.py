@@ -135,3 +135,8 @@ class Emu8255:
 
     def write_range(self, data: bytes, offset: int) -> None:
         self.memory[offset:offset + len(data)] = data
+
+    def terminate(self) -> None:
+        terminate_instruction = self.memory[0x2700]
+        if terminate_instruction:
+            self.write_register(0xA, terminate_instruction)

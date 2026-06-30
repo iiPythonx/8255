@@ -35,5 +35,10 @@ def main() -> None:
     # System loop
     delay = 1 / speed if speed != 0 else 0
     while True:
-        system.step()
+        try:
+            system.step()
+
+        except KeyboardInterrupt:
+            system.terminate()
+
         sleep(delay)

@@ -35,7 +35,7 @@ uv pip install -e .
 ## Specifications
 
 Last updated: June 28th, 2026  
-Version: 1.2
+Version: 1.2.1
 
 ### Memory
 
@@ -74,13 +74,13 @@ V = VALUE (ASM EMBEDDED)
 
 0x00: HLT     (HALT)
 0x01: LDI R V (LOAD IMMEDIATE)
-0x02: LBA A A (LOAD BYTE ADDRESS)
+0x02: LBA R A (LOAD BYTE ADDRESS)
 0x03: LBR R R (LOAD BYTE REGISTER)
-0x04: LWA A A (LOAD WORD ADDRESS)
+0x04: LWA R A (LOAD WORD ADDRESS)
 0x05: LWR R R (LOAD WORD REGISTER)
-0x06: SBA A A (STORE BYTE ADDRESS)
+0x06: SBA R A (STORE BYTE ADDRESS)
 0x07: SBR R R (STORE BYTE REGISTER)
-0x08: SWA A A (STORE WORD ADDRESS)
+0x08: SWA R A (STORE WORD ADDRESS)
 0x09: SWR R R (STORE WORD REGISTER)
 0x0A: ADD R R (ADD)
 0x0B: SUB R R (SUBTRACT)
@@ -105,6 +105,32 @@ V = VALUE (ASM EMBEDDED)
 
 See the [vm/drivers](./src/x8255/vm/drivers) tree for a list of drivers.  
 It's up to the driver maintainer to produce accurate documentation regarding their use.
+
+## Labels
+
+### Preload
+
+You can create a label called `preload` to store strings into the data block automatically at assembly time.  
+Here's an example:
+
+```asm
+preload:
+    .hello "Hello, world!"
+```
+
+This string will be automatically loaded into memory starting at the 0x2000 block.  
+Referencing it can be done with `ldi r1, &hello`, which will load the string's memory address into R1.
+
+### Main
+
+No main label is required to be used, as the only requirement of 8255 assembly is that ONE label exists (of which preload does not count).  
+If you do add a main label, however, you will likely want to make use of the `-Z` (`--zero-jump`) flag on `8255asm`, which will auto jump to main on program init.
+
+### Terminate
+
+If you choose to add a `terminate` label to your code, it will automatically have its memory address loaded into byte `0x2700` in the DATA block.  
+
+This block is read when CTRL+C is pressed, and the CPU will immediately jump to whatever instructions are stored there. This does mean you need to manually call `HLT` to stop execution though.
 
 ## Inspiration
 

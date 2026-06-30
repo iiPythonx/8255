@@ -7,6 +7,14 @@ from dataclasses import dataclass
 
 from x8255.isa import INSTRUCTIONS, REGISTERS, Addresses
 
+# Typing
+class Component:
+    bytes: bytearray
+    index: int
+
+    def __init__(self, bytes: bytearray = bytearray(), index: int = 0) -> None:
+        self.bytes, self.index = bytes, index
+
 # Exceptions
 class CompilationError(Exception):
     def __init__(self, offset: int, section: "Section", message: str) -> None:
@@ -26,7 +34,7 @@ LABEL_REGEX = re.compile(r"^\w+\:")
 
 INSTRUCTS_BY_VERB = {v.opcode: (k, v) for k, v in INSTRUCTIONS.items()}
 
-def generate_preload(section: "Section") -> tuple[list[bytearray | int], dict[str, int]]:
+def generate_preload(section: "Section") -> tuple[Component, dict[str, int]]:
     store, offset, strmap, index = bytearray([0] * Addresses.DATA.size), 0, {}, 0
     for index, line in enumerate(section.lines):
         line_match = PRELOAD_REGEX.match(line.encode())
@@ -42,22 +50,22 @@ def generate_preload(section: "Section") -> tuple[list[bytearray | int], dict[st
         store[offset : offset + len(value)] = value.decode("unicode-escape").encode("utf-8")
         offset += len(value)
 
-    return [store, index], strmap
+    return Component(store, index), strmap
 
 def generate_snapshot(sections: dict[str, "Section"], zero_jump: bool = False) -> bytearray:
-    components, strmap = {"code": [bytearray([0] * Addresses.CODE.size), 0]}, {}
+    components, strmap = {"code": Component(bytearray([0] * Addresses.CODE.size))}, {}
     def write(item: int | bytes) -> None:
-        array, index = components["code"]
+        index = components["code"].index
         if isinstance(item, int):
-            array[index] = item
-            components["code"][1] += 1
+            components["code"].bytes[index] = item
+            components["code"].index += 1
             return
 
-        array[index : index + len(item)] = item
-        components["code"][1] += len(item)
+        components["code"].bytes[index : index + len(item)] = item
+        components["code"].index += len(item)
 
     def log(line: str, total_size: int):
-        current_array, current_index = components["code"]
+        current_array, current_index = components["code"].bytes, components["code"].index
         print(f"0x{current_index - total_size:04x} | {line:<30} | {current_array[current_index - total_size:current_index].hex(' ', 1)}")
 
     print(f"OFFSET | {'INSTRUCTION':<30} | BYTECODE")
@@ -74,7 +82,7 @@ def generate_snapshot(sections: dict[str, "Section"], zero_jump: bool = False) -
             components["data"], strmap = generate_preload(section)
             continue
 
-        subroutines[name] = components["code"][1]
+        subroutines[name] = components["code"].index
         for index, line in enumerate(section.lines):
             arguments = line.split(",")
             instruction, *arguments = [a.strip() for a in arguments[0].split() + arguments[1:]]
@@ -121,10 +129,14 @@ def generate_snapshot(sections: dict[str, "Section"], zero_jump: bool = False) -
     # Update zero jump to match correct main address
     print()
     if "main" in subroutines and zero_jump:
-        components["code"][0][1:3] = subroutines["main"].to_bytes(2)
+        components["code"].bytes[1:3] = subroutines["main"].to_bytes(2)
         print(f"Zero-jump: main is at 0x{subroutines['main']:04x}")
 
-    return components["code"][0] + components.get("data", [bytearray(), 0])[0]
+    # Update data block if terminate exists
+    if "terminate" in subroutines:
+        components["data"].bytes[0x0700] = subroutines["terminate"]
+
+    return components["code"].bytes + components.get("data", Component()).bytes
 
 # Parsing
 @dataclass
