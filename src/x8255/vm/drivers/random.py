@@ -8,13 +8,13 @@
 #   W 0x0032 - Set maximum bound
 #
 # Examples:
-#   ldm r1, 0x0030  # Load random number between 0 - 65535 to R1
-#   str r1, 0x0024  # Send R1 to screen
+#   lwa r1, 0x0030  ; Load random number between 0 - 65535 to R1
+#   swa r1, 0x0024  ; Send R1 to screen
 #
 #   ldi r1, 100
-#   str r1, 0x0032  # Set RNG upper bound to 100
-#   ldm r1, 0x0030  # Load random number between 0 - 100 to R1
-#   str r1, 0x0024  # Send R1 to screen
+#   swa r1, 0x0032  ; Set RNG upper bound to 100
+#   lwa r1, 0x0030  ; Load random number between 0 - 100 to R1
+#   swa r1, 0x0024  ; Send R1 to screen
 
 import random
 

@@ -12,6 +12,13 @@
 #   R 0x005A - Read current MONTH
 #   R 0x005C - Read current YEAR
 #   W 0x005E - Sleep main thread for specified duration in milliseconds
+#
+# Examples:
+#   lwa r1, 0x0058  ; Load current day of month
+#   swa r1, 0x0024  ; Send R1 (day) to screen
+#
+#   ldi r1, 500
+#   swa r1, 0x005E  ; Halt main thread for 500ms
 
 from time import sleep
 from datetime import datetime

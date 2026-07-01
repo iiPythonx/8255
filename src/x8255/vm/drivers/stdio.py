@@ -13,24 +13,24 @@
 # 
 # Examples:
 #   ldi r1, 72
-#   str r1, 0x0020  # Send ASCII 72 (H) from R1 to the screen
+#   swa r1, 0x0020  ; Send ASCII 72 (H) from R1 to the screen
 #
-#   ldi r1, &hello  # Assume hello is an existing string
-#   str r1, 0x0022  # Send the entire string to the screen
-#                   # This also reads until it hits a NULL byte (\0), so be wary of that
+#   ldi r1, &hello  ; Assume hello is an existing string
+#   swa r1, 0x0022  ; Send the entire string to the screen
+#                   ; This also reads until it hits a NULL byte (\0), so be wary of that
 #
 #   ldi r1, 69
-#   str r1, 0x0024  # Send the number 69 to the screen (for debugging math, etc)
+#   swa r1, 0x0024  ; Send the number 69 to the screen (for debugging math, etc)
 #
-#   ldi r1, 0       # Not needed, as clear doesn't care about args
-#   str r1, 0x0026  # Wipe the entire screen and reset
+#   ldi r1, 0       ; Not needed, as clear doesn't care about args
+#   swa r1, 0x0026  ; Wipe the entire screen and reset
 #
-#   ldm r1, 0x0028  # Grab one character from stdin
-#   ldi r1, 0x0024  # Send ASCII code to stdout
+#   lwa r1, 0x0028  ; Grab one character from stdin
+#   ldi r1, 0x0024  ; Send ASCII code to stdout
 #
-#   ldi r1, 0x2100  # Set R1 to memory addr 0x2100
-#   str r1, 0x002A  # Request an entire string from stdin
-#   str r1, 0x0022  # Send the entire memory block to the screen
+#   ldi r1, 0x2100  ; Set R1 to memory addr 0x2100
+#   swa r1, 0x002A  ; Request an entire string from stdin
+#   swa r1, 0x0022  ; Send the entire memory block to the screen
 
 import sys
 import tty

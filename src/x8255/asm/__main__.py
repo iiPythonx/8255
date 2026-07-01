@@ -10,7 +10,7 @@ from x8255.asm.core import parse_sections_from_file, generate_snapshot
 def main() -> None:
     p.add_argument("source", type = Path, help = "path to source code")
     p.add_argument("-G", "--gzip", action = "store_true", default = False, help = "compress output with gzip")
-    p.add_argument("-Z", "--zero-jump", action = "store_true", default = False, help = "auto jump to the .main label on launch")
+    p.add_argument("-Z", "--zero-jump", action = "store_true", default = False, help = "auto jump to the main label on launch")
     args = p.parse_args()
 
     # Confirm file
