@@ -33,8 +33,7 @@ class CompilationError(Exception):
 
         target_code = file_lines[target_line].strip()
         
-        print("\033[31m8255c: compilation issue")
-        print("=" * 50, end = "\033[0m\n\n")
+        print("\n\033[31m8255c: compilation issue\n")
         print(f"\033[33m{section.file.path}:{target_line + 1}\033[90m in label \033[33m{section.name}\033[90m is invalid:")
         print(f"  > \033[33m{target_code}\033[31m\n")
         print(f"E: \033[4m{message}\033[24m\033[0m")
@@ -79,15 +78,14 @@ def generate_snapshot(sections: dict[str, "Section"], zero_jump: bool = False) -
 
     def log(line: str, total_size: int):
         current_array, current_index = components["code"].bytes, components["code"].index
-        print(f"0x{current_index - total_size:04x} | {line:<30} | {current_array[current_index - total_size:current_index].hex(' ', 1)}")
+        print(f"\033[90m0x{current_index - total_size:04x}   \033[32m{line:<30}   \033[90m{current_array[current_index - total_size:current_index].hex(' ', 1)}\033[0m")
 
-    print(f"OFFSET | {'INSTRUCTION':<30} | BYTECODE")
-    print("-" * 80)
+    print(f"\033[4m\033[34mOFFSET   {'INSTRUCTION':<30}   {'BYTECODE':<20}\033[0m")
 
     if zero_jump:
         write(INSTRUCTS_BY_VERB["JMP"][0])
         write(int(0).to_bytes(2))
-        log("jmp &main", 3)
+        log("jmp main", 3)
 
     subroutines: dict[str, int] = {}
     for name, section in sections.items():
@@ -143,7 +141,7 @@ def generate_snapshot(sections: dict[str, "Section"], zero_jump: bool = False) -
     print()
     if "main" in subroutines and zero_jump:
         components["code"].bytes[1:3] = subroutines["main"].to_bytes(2)
-        print(f"Zero-jump: main is at 0x{subroutines['main']:04x}")
+        print(f"Zero-jump: \033[32mmain\033[0m is at \033[32m0x{subroutines['main']:04x}\033[0m")
 
     # Update data block if terminate exists
     if "terminate" in subroutines:
