@@ -21,7 +21,7 @@ source .venv/bin/activate
 uv pip install -e .
 
 # Run the clock example
-8255asm examples/clock.asm
+8255asm -Z -d time,stdio examples/clock.asm
 8255emu examples/clock.bin
 ```
 
@@ -34,7 +34,7 @@ uv pip install -e .
 
 ## Specifications
 
-Last updated: June 30th, 2026  
+Last updated: July 1st, 2026  
 Version: 1.2.1
 
 ### Memory

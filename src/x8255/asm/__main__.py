@@ -12,6 +12,8 @@ def main() -> None:
     p.add_argument("source", type = Path, help = "path to source code")
     p.add_argument("-G", "--gzip", action = "store_true", default = False, help = "compress output with gzip")
     p.add_argument("-Z", "--zero-jump", action = "store_true", default = False, help = "auto jump to the main label on launch")
+    p.add_argument("-d", "--drivers", help = "enabled list of drivers, default: stdio", default = "stdio")
+    p.add_argument("-N", "--no-drivers", action = "store_true", help = "disable all drivers", default = False)
 
     args = p.parse_args()
 
@@ -25,10 +27,8 @@ def main() -> None:
 
     # Initialize requested drivers
     # We need to do this to retrieve their name mappings
-    drivers = DriverManager(
-        bytearray(),
-        enabled_drivers = args.drivers.split(",") if not args.no_drivers else []
-    )
+    enabled_drivers = args.drivers.split(",") if not args.no_drivers else []
+    drivers = DriverManager(bytearray(), enabled_drivers)
 
     # Build snapshot
     start_time = perf_counter()
@@ -38,6 +38,14 @@ def main() -> None:
         driver_map = drivers.binding_names
     )
     elapsed = perf_counter() - start_time
+
+    # Add in the enabled driver names
+    driver_bytes = bytearray()
+    driver_bytes.append(len(enabled_drivers))
+    for driver_name in enabled_drivers:
+        driver_bytes.extend(driver_name.encode() + b"\0")
+
+    snapshot = driver_bytes + snapshot
 
     # Compression
     if args.gzip:

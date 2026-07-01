@@ -35,9 +35,24 @@ def main() -> None:
     if speed < 0:
         cexit("Provided speed argument is negative and thus invalid.")
 
+    # Fetch drivers
+    enabled_drivers, driver_offset = [], 0
+    for _ in range(bytecode[0]):
+        driver_name = ""
+        for character in bytecode[driver_offset + 1:]:
+            if not character:
+                break
+
+            driver_name += chr(character)
+
+        enabled_drivers.append(driver_name)
+        driver_offset += len(driver_name) + 1
+
+    bytecode = bytecode[driver_offset + 1:]
+
     # Setup emulation
     system = Emu8255(
-        enabled_drivers = args.drivers.split(",") if not args.no_drivers else [],
+        enabled_drivers = enabled_drivers,
         enable_debugger = args.debug
     )
 
