@@ -1,9 +1,5 @@
 <p align = "center">
-    <picture>
-        <source media = "(prefers-color-scheme: dark)" srcset = ".github/logo_dark.png">
-        <source media = "(prefers-color-scheme: light)" srcset = ".github/logo_light.png">
-        <img alt = "8255 logo" src = ".github/logo_dark.png">
-    </picture>
+    <img alt = "8255 logo" src = ".github/logo.png">
     <hr>
 </p>
 
