@@ -12,7 +12,7 @@ write:
     ; Should we die? (hit end of string)
     ldi r7, 0
     cmp r3, r7  ; r3 = current character, r7 = null (0)
-    jeq halt   ; hit a null string terminator
+    jeq halt    ; hit a null string terminator
 
     ; Send character to terminal
     swa r3, 0x0020

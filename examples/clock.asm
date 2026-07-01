@@ -35,6 +35,11 @@ suffix:
     jge pm
     ret
 
+timecall:
+    swa r9, 0x0050
+    lwa r1, 0x0052
+    ret
+
 unit:
 
     ; Colon
@@ -67,7 +72,8 @@ reset:
 clock:
 
     ; Fetch hour
-    lwa r1, 0x0056
+    ldi r9, 3
+    cal timecall
 
     ; Check for PM
     ldi r2, 12      ; PM = Past 12
@@ -83,15 +89,18 @@ clock:
     swa r1, 0x0024
 
     ; Minute
-    lwa r1, 0x0054
+    ldi r9, 2
+    cal timecall
     cal unit
 
     ; Second
-    lwa r1, 0x0052
+    ldi r9, 1
+    cal timecall
     cal unit
 
     ; PM
-    lwa r1, 0x0056
+    ldi r9, 3
+    cal timecall
     ldi r2, 12
     cmp r1, r2
     cal suffix
@@ -109,7 +118,7 @@ clock:
 
     ; Sleep and repeat
     ldi r1, 500
-    swa r1, 0x005E
+    swa r1, 0x0058
     jmp clock
 
 terminate:

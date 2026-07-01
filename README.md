@@ -20,9 +20,9 @@ uv venv
 source .venv/bin/activate
 uv pip install -e .
 
-# Run the UNIX epoch example
-8255asm examples/epoch.asm
-8255emu examples/epoch.bin
+# Run the clock example
+8255asm examples/clock.asm
+8255emu examples/clock.bin
 ```
 
 ## Features
