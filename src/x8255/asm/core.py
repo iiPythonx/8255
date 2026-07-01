@@ -18,12 +18,24 @@ class Component:
 # Exceptions
 class CompilationError(Exception):
     def __init__(self, offset: int, section: "Section", message: str) -> None:
-        target_line = offset + section.start
-        target_code = section.file.lines[target_line]
+        target_line, line_track = offset + section.start, 0
+
+        # Start reiterating over the file
+        file_lines = section.file.path.read_text().splitlines()
+        for index, line in enumerate(file_lines):
+            actual_line = line.strip() and line.strip()[0] != ";"
+            if actual_line:
+                line_track += 1
+
+            if target_line == line_track:
+                target_line = index + 1  # +1 for label
+                break
+
+        target_code = file_lines[target_line].strip()
         
         print("\033[31m8255c: compilation issue")
         print("=" * 50, end = "\033[0m\n\n")
-        print(f"\033[90mLine \033[33m{target_line}\033[90m in \033[33m{section.file.path}\033[90m is invalid:")
+        print(f"\033[33m{section.file.path}:{target_line + 1}\033[90m in label \033[33m{section.name}\033[90m is invalid:")
         print(f"  > \033[33m{target_code}\033[31m\n")
         print(f"E: \033[4m{message}\033[24m\033[0m")
         exit(1)
@@ -160,11 +172,11 @@ def parse_sections_from_file(path: Path) -> dict[str, Section]:
             active_section.end = index - 1
             sections[active_section.name] = active_section
 
-    file = File(path, [line.strip() for line in path.read_text().splitlines() if line.strip()])
-    for index, line in enumerate(file.lines):
-        if line.startswith(";"):
-            continue
+    clean_lines = [line.strip() for line in path.read_text().splitlines()]
 
+    # Handle individual lines
+    file = File(path, [line for line in clean_lines if line and line[0] != ";"])
+    for index, line in enumerate(file.lines):
         if LABEL_REGEX.match(line):
             push_section()
             active_section = Section(line[:-1], index + 1, 0, file, [])
