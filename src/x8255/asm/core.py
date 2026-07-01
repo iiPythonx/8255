@@ -42,6 +42,7 @@ class CompilationError(Exception):
 # Compilation
 PRELOAD_REGEX = re.compile(rb"\.(\w+)\s+\"(.+)\"")
 LABEL_REGEX = re.compile(r"^\w+\:")
+CHARACTER_REGEX = re.compile(r"'[\w!@#$%^&*()_+-={}\[\]\\|\":;<>,./?~` ]'")
 
 REGISTERS_BY_NAME = {reg.name: reg for reg in REGISTERS}
 INSTRUCTS_BY_VERB = {v.opcode: (k, v) for k, v in INSTRUCTIONS.items()}
@@ -115,6 +116,9 @@ def generate_snapshot(sections: dict[str, "Section"], zero_jump: bool = False, d
 
                     elif target.startswith("&") and target[1:] in strmap:
                         write(strmap[target[1:]].to_bytes(2))
+
+                    elif CHARACTER_REGEX.match(target):
+                        write(ord(target[1:-1]).to_bytes(2))
 
                     elif target.startswith("D_"):
                         if target[2:] not in driver_map:

@@ -23,11 +23,11 @@ zp_check:
     ret
 
 am:
-    ldi r1, 65
+    ldi r1, 'A'
     ret
 
 pm:
-    ldi r1, 80
+    ldi r1, 'P'
     ret
 
 suffix:
@@ -42,7 +42,7 @@ timecall:
 unit:
 
     ; Colon
-    ldi r7, 58
+    ldi r7, ':'
     swa r7, D_WRITE_CHR
 
     ; Actual number
@@ -57,14 +57,14 @@ reset:
     ldi r1, &escape
     swa r1, D_WRITE_STR
 
-    ldi r1, 49
-    swa r1, D_WRITE_CHR  ; 1
+    ldi r1, '1'
+    swa r1, D_WRITE_CHR
 
-    ldi r1, 50
-    swa r1, D_WRITE_CHR  ; 2
+    ldi r1, '2'
+    swa r1, D_WRITE_CHR
 
-    ldi r1, 68
-    swa r1, D_WRITE_CHR  ; m
+    ldi r1, 'D'
+    swa r1, D_WRITE_CHR
 
     ret
 
@@ -104,13 +104,13 @@ clock:
     cmp r1, r2
     cal suffix
 
-    ldi r2, 32
-    swa r2, D_WRITE_CHR  ; Space
+    ldi r2, ' '
+    swa r2, D_WRITE_CHR
     swa r1, D_WRITE_CHR  ; A / P
-    ldi r1, 77
-    swa r1, D_WRITE_CHR  ; M
-    ldi r1, 46
-    swa r1, D_WRITE_CHR  ; .
+    ldi r1, 'M'
+    swa r1, D_WRITE_CHR
+    ldi r1, '.'
+    swa r1, D_WRITE_CHR
 
     ; Reset back to start of time section
     cal reset
