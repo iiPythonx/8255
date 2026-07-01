@@ -13,7 +13,7 @@ main:
 
     ; I/O
     ldi r3, &a
-    swa r3, 0x0022  ; Send string &a to terminal
-    swa r1, 0x0024  ; Send resulting number to terminal
+    swa r3, D_WRITE_STR  ; Send string &a to terminal
+    swa r1, D_WRITE_INT  ; Send resulting number to terminal
     ldi r3, &b
-    swa r3, 0x0022  ; Send string &b to terminal
+    swa r3, D_WRITE_STR  ; Send string &b to terminal

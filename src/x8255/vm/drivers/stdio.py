@@ -40,12 +40,12 @@ from x8255.vm.drivers import DriverManager
 
 class Driver:
     def __init__(self, core: DriverManager) -> None:
-        core.bind_write(0x0020, self.write_character)
-        core.bind_write(0x0022, self.write_string)
-        core.bind_write(0x0024, self.write_integer)
-        core.bind_write(0x0026, self.clear_screen)
-        core.bind_read(0x0028, self.read_stdin_getch)
-        core.bind_write(0x002A, self.read_stdin_input)
+        core.bind_write("WRITE_CHR", 0x0020, self.write_character)
+        core.bind_write("WRITE_STR", 0x0022, self.write_string)
+        core.bind_write("WRITE_INT", 0x0024, self.write_integer)
+        core.bind_write("CLEAR_SCR", 0x0026, self.clear_screen)
+        core.bind_read( "READ_CHR",  0x0028, self.read_stdin_getch)
+        core.bind_write("READ_STR",  0x002A, self.read_stdin_input)
 
     def write(self, data: str) -> None:
         print(data, end = "", flush = True)

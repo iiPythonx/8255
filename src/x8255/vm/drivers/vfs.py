@@ -18,13 +18,13 @@ from x8255.vm.drivers import DriverManager
 
 class Driver:
     def __init__(self, core: DriverManager) -> None:
-        core.bind_write(0x0040, self.write_memory_address)
-        core.bind_write(0x0042, self.write_file_contents)
-        core.bind_write(0x0044, self.write_data_size)
-        core.bind_write(0x0046, self.write_into_file)
-        core.bind_write(0x0048, self.write_into_file_auto)
-        core.bind_read(0x004A, self.read_file_size)
-        core.bind_read(0x004C, self.read_file_status)
+        core.bind_write("SET_FILENAME",        0x0040, self.write_memory_address)
+        core.bind_write("READ_FILE",           0x0042, self.write_file_contents)
+        core.bind_write("SET_FILE_WRITE_SIZE", 0x0044, self.write_data_size)
+        core.bind_write("WRITE_TO_FILE",       0x0046, self.write_into_file)
+        core.bind_write("WRITE_TO_NULL_FILE",  0x0048, self.write_into_file_auto)
+        core.bind_read( "READ_FILE_SIZE",      0x004A, self.read_file_size)
+        core.bind_read( "READ_FILE_STATUS",    0x004C, self.read_file_status)
 
         self.address = 0x2400
         self.size = 0

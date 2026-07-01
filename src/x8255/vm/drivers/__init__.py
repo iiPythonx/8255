@@ -8,6 +8,7 @@ from x8255.cli import cexit
 class DriverManager:
     def __init__(self, memory: bytearray, enabled_drivers: list[str]) -> None:
         self.memory = memory
+        self.binding_names: dict[str, int] = {}
 
         # Mappings
         self.read_mapping: dict[int, typing.Callable] = {}
@@ -26,10 +27,12 @@ class DriverManager:
             except ModuleNotFoundError:
                 cexit(f"Attempted to load driver '{package}', but it was not found!")
 
-    def bind_write(self, address: int, callback: typing.Callable) -> None:
+    def bind_write(self, name: str, address: int, callback: typing.Callable) -> None:
+        self.binding_names[name] = address
         self.write_mapping[address] = callback
 
-    def bind_read(self, address: int, callback: typing.Callable) -> None:
+    def bind_read(self, name: str, address: int, callback: typing.Callable) -> None:
+        self.binding_names[name] = address
         self.read_mapping[address] = callback
 
     def on_write(self, address: int, value: int) -> bool:

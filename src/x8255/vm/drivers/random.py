@@ -22,8 +22,8 @@ from x8255.vm.drivers import DriverManager
 
 class Driver:
     def __init__(self, core: DriverManager) -> None:
-        core.bind_read(0x0030, self.read_random)
-        core.bind_write(0x0032, self.write_upper_bound)
+        core.bind_read( "GET_RANDOM",        0x0030, self.read_random)
+        core.bind_write("SET_RANDOM_BOUNDS", 0x0032, self.write_upper_bound)
 
         self.upper_bound = (2 ** 16) - 1
 

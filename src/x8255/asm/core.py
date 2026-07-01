@@ -64,7 +64,7 @@ def generate_preload(section: "Section") -> tuple[Component, dict[str, int]]:
 
     return Component(store, index), strmap
 
-def generate_snapshot(sections: dict[str, "Section"], zero_jump: bool = False) -> bytearray:
+def generate_snapshot(sections: dict[str, "Section"], zero_jump: bool = False, driver_map: dict[str, int] = {}) -> bytearray:
     components, strmap = {"code": Component(bytearray([0] * Addresses.CODE.size))}, {}
     def write(item: int | bytes) -> None:
         index = components["code"].index
@@ -115,6 +115,12 @@ def generate_snapshot(sections: dict[str, "Section"], zero_jump: bool = False) -
 
                     elif target.startswith("&") and target[1:] in strmap:
                         write(strmap[target[1:]].to_bytes(2))
+
+                    elif target.startswith("D_"):
+                        if target[2:] not in driver_map:
+                            raise CompilationError(index, section, "Reference to an unloaded driver routine!")
+
+                        write(driver_map[target[2:]].to_bytes(2))
 
                     else:
                         try:

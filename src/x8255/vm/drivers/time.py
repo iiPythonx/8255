@@ -35,11 +35,11 @@ from x8255.vm.drivers import DriverManager
 
 class Driver:
     def __init__(self, core: DriverManager) -> None:
-        core.bind_write(0x0050, self.write_selection)
-        core.bind_read(0x0052, self.read_selection)
-        core.bind_write(0x0054, self.write_strftime)
-        core.bind_write(0x0056, self.read_strftime)
-        core.bind_write(0x0058, self.write_sleep)
+        core.bind_write("SET_TIME_UNIT", 0x0050, self.write_selection)
+        core.bind_read( "READ_TIME",     0x0052, self.read_selection)
+        core.bind_write("SET_TIME_FMT",  0x0054, self.write_strftime)
+        core.bind_write("READ_TIME_FMT", 0x0056, self.read_strftime)
+        core.bind_write("SLEEP",         0x0058, self.write_sleep)
 
         # State
         self.selection = 0

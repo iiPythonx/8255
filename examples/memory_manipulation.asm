@@ -15,7 +15,7 @@ write:
     jeq halt    ; hit a null string terminator
 
     ; Send character to terminal
-    swa r3, 0x0020
+    swa r3, D_WRITE_CHR
 
     ; Increment status
     ldi r8, 1

@@ -9,8 +9,6 @@ from x8255.isa import Addresses
 from x8255.vm.core import Emu8255
 
 def main() -> None:
-    p.add_argument("-N", "--no-drivers", action = "store_true", help = "disable all drivers", default = False)
-    p.add_argument("-d", "--drivers", help = "enabled list of drivers, default: stdio", default = "stdio")
     p.add_argument("-s", "--speed", type = int, help = "emulation speed in hertz, default: no limit", default = 0)
     p.add_argument("-D", "--debug", action = "store_true", help = "enable the debugger", default = False)
     p.add_argument("executable", type = Path, help = "path to compiled executable")

@@ -15,7 +15,7 @@ fix_hour_init:
 
 zero_pad:
     ldi r7, 0
-    swa r7, 0x0024
+    swa r7, D_WRITE_INT
     ret
 
 zp_check:
@@ -33,39 +33,38 @@ pm:
 suffix:
     jlt am
     jge pm
-    ret
 
 timecall:
-    swa r9, 0x0050
-    lwa r1, 0x0052
+    swa r9, D_SET_TIME_UNIT
+    lwa r1, D_READ_TIME
     ret
 
 unit:
 
     ; Colon
     ldi r7, 58
-    swa r7, 0x0020
+    swa r7, D_WRITE_CHR
 
     ; Actual number
     ldi r2, 10
     cmp r1, r2      ; Check if we need to zero pad
     cal zp_check
 
-    swa r1, 0x0024
+    swa r1, D_WRITE_INT
     ret
 
 reset:
     ldi r1, &escape
-    swa r1, 0x0022
+    swa r1, D_WRITE_STR
 
     ldi r1, 49
-    swa r1, 0x0020  ; 1
+    swa r1, D_WRITE_CHR  ; 1
 
     ldi r1, 50
-    swa r1, 0x0020  ; 2
+    swa r1, D_WRITE_CHR  ; 2
 
     ldi r1, 68
-    swa r1, 0x0020  ; m
+    swa r1, D_WRITE_CHR  ; m
 
     ret
 
@@ -86,7 +85,7 @@ clock:
     cal zp_check
 
     ; Hour
-    swa r1, 0x0024
+    swa r1, D_WRITE_INT
 
     ; Minute
     ldi r9, 2
@@ -106,35 +105,35 @@ clock:
     cal suffix
 
     ldi r2, 32
-    swa r2, 0x0020  ; Space
-    swa r1, 0x0020  ; A / P
+    swa r2, D_WRITE_CHR  ; Space
+    swa r1, D_WRITE_CHR  ; A / P
     ldi r1, 77
-    swa r1, 0x0020  ; M
+    swa r1, D_WRITE_CHR  ; M
     ldi r1, 46
-    swa r1, 0x0020  ; .
+    swa r1, D_WRITE_CHR  ; .
 
     ; Reset back to start of time section
     cal reset
 
     ; Sleep and repeat
     ldi r1, 500
-    swa r1, 0x0058
+    swa r1, D_SLEEP
     jmp clock
 
 terminate:
     ldi r1, &show
-    swa r1, 0x0022
+    swa r1, D_WRITE_STR
     hlt
 
 main:
 
     ; Hide cursor
     ldi r1, &invis
-    swa r1, 0x0022
+    swa r1, D_WRITE_STR
 
     ; Show current time message
     ldi r1, &time
-    swa r1, 0x0022
+    swa r1, D_WRITE_STR
 
     ; And start looping
     jmp clock
