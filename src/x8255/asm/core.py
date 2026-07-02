@@ -132,8 +132,9 @@ def generate_snapshot(sections: dict[str, "Section"], zero_jump: bool = False, d
                             write(int(target).to_bytes(2))
 
                         except ValueError:
-                            write(b"\0\0")
-                            pending_subroutines[target] = components["code"].index - 2
+                            write(b"\b\b")
+                            pending_subroutines.setdefault(target, [])
+                            pending_subroutines[target].append(components["code"].index - 2)
 
                 elif argument.size == 1:
                     register_id = REGISTERS_BY_NAME[target.upper()]
@@ -157,11 +158,12 @@ def generate_snapshot(sections: dict[str, "Section"], zero_jump: bool = False, d
         components["data"].bytes[0x0700] = subroutines["terminate"]
 
     # Update subroutines
-    for subroutine, address in pending_subroutines.items():
+    for subroutine, addresses in pending_subroutines.items():
         if subroutine not in subroutines:
-            cexit(f"\033[31mE: Reference to unknown subroutine! {subroutine} requested at {hex(address)} but it doesn't exist!\033[0m")
+            cexit(f"\033[31mE: Reference to unknown subroutine! {subroutine} requested at {', '.join(hex(address) for address in addresses)} but it doesn't exist!\033[0m")
 
-        components["code"].bytes[address:address + 2] = subroutines[subroutine].to_bytes(2)
+        for address in addresses:
+            components["code"].bytes[address:address + 2] = subroutines[subroutine].to_bytes(2)
 
     return components["code"].bytes + components.get("data", Component()).bytes
 
