@@ -146,6 +146,21 @@ INSTRUCTIONS = {
         [Register()],
         "POP",
         "POP STACK TO REGISTER"
+    ),
+    0x1B: Instruction(
+        [Register()],
+        "INC",
+        "INCREMENT"
+    ),
+    0x1C: Instruction(
+        [Register()],
+        "DEC",
+        "DECREMENT"
+    ),
+    0x1D: Instruction(
+        [Register(), Register()],
+        "MOV",
+        "COPY REGISTER"
     )
 }
 

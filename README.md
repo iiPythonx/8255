@@ -30,8 +30,8 @@ uv pip install -e .
 
 ## Specifications
 
-Last updated: July 1st, 2026  
-Version: 1.2.1
+Last updated: July 2nd, 2026  
+Version: 1.3.0
 
 ### Memory
 
@@ -95,6 +95,9 @@ V = VALUE (ASM EMBEDDED)
 0x18: RET     (RETURN FROM SUBROUTINE)
 0x19: PSH R   (PUSH REGISTER TO STACK)
 0x1A: POP R   (POP STACK TO REGISTER)
+0x1B: INC R   (INCREMENT)
+0x1C: DEC R   (DECREMENT)
+0x1D: MOV R R (COPY REGISTER)
 ```
 
 ### Drivers

@@ -127,6 +127,15 @@ class Emu8255:
             case "JLE" if self.read_register(0xB) in {0, 255}:
                 self.write_register(0xA, arguments[0])
 
+            case "INC":
+                self.write_register(arguments[0], self.read_register(arguments[0]) + 1)
+
+            case "DEC":
+                self.write_register(arguments[0], self.read_register(arguments[0]) - 1)
+
+            case "MOV":
+                self.write_register(arguments[0], self.read_register(arguments[1]))
+
         new_current_line = self.read_register(0xA)
         if current_line == new_current_line:
             self.write_register(0xA, new_current_line + read_offset)
