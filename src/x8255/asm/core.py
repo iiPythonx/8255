@@ -5,6 +5,7 @@ import re
 from pathlib import Path
 from dataclasses import dataclass
 
+from x8255.cli import cexit
 from x8255.isa import INSTRUCTIONS, REGISTERS, Addresses
 
 # Typing
@@ -88,7 +89,7 @@ def generate_snapshot(sections: dict[str, "Section"], zero_jump: bool = False, d
         write(int(0).to_bytes(2))
         log("jmp main", 3)
 
-    subroutines: dict[str, int] = {}
+    subroutines, pending_subroutines = {}, {}
     for name, section in sections.items():
         if name == "preload":
             components["data"], strmap = generate_preload(section)
@@ -131,10 +132,8 @@ def generate_snapshot(sections: dict[str, "Section"], zero_jump: bool = False, d
                             write(int(target).to_bytes(2))
 
                         except ValueError:
-                            if target not in subroutines:
-                                raise CompilationError(index, section, "Reference to unknown subroutine!")
-
-                            write(subroutines[target].to_bytes(2))
+                            write(b"\0\0")
+                            pending_subroutines[target] = components["code"].index - 2
 
                 elif argument.size == 1:
                     register_id = REGISTERS_BY_NAME[target.upper()]
@@ -156,6 +155,13 @@ def generate_snapshot(sections: dict[str, "Section"], zero_jump: bool = False, d
     # Update data block if terminate exists
     if "terminate" in subroutines:
         components["data"].bytes[0x0700] = subroutines["terminate"]
+
+    # Update subroutines
+    for subroutine, address in pending_subroutines.items():
+        if subroutine not in subroutines:
+            cexit(f"\033[31mE: Reference to unknown subroutine! {subroutine} requested at {hex(address)} but it doesn't exist!\033[0m")
+
+        components["code"].bytes[address:address + 2] = subroutines[subroutine].to_bytes(2)
 
     return components["code"].bytes + components.get("data", Component()).bytes
 
