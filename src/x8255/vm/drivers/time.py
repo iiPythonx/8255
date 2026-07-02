@@ -30,6 +30,7 @@
 
 from time import sleep
 from datetime import datetime
+from zoneinfo import ZoneInfo
 
 from x8255.vm.drivers import DriverManager
 
@@ -47,7 +48,7 @@ class Driver:
 
     @property
     def now(self) -> datetime:
-        return datetime.now()
+        return datetime.now(tz = ZoneInfo("localtime"))
 
     def write_selection(self, memory: bytearray, value: int) -> None:
         self.selection = value

@@ -8,18 +8,20 @@ preload:
     .goodbye   "\n\033[31mGoodbye!\033[0m\n"
     .no_cmd    "\033[32mNocturne\033[0m: no such command exists!\n"
     .version   "\033[32mNocturne Shell\033[0m v0.2.0, powered by \033[34m8255\033[0m.\n"
-    .help      "Commands: \033[32mhelp\033[0m, \033[32mmem\033[0m, \033[32mclear\033[0m, \033[32mversion\033[0m, \033[32mexit\033[0m\n"
+    .help      "Commands: \033[32mhelp\033[0m, \033[32mmem\033[0m, \033[32mdate\033[0m, \033[32mclear\033[0m, \033[32mversion\033[0m, \033[32mexit\033[0m\n"
+    .strftime  "%a %b %-d %H:%M:%S %p %Z %Y\n"
     .mem1      "Probing... "
     .mem2      "\rMemory usage: "
     .mem3      " B / 4096 B ("
     .mem4      "%)\n"
 
     ; Commands
-    .cmd_version "version"
-    .cmd_help    "help"
-    .cmd_exit    "exit"
-    .cmd_clear   "clear"
-    .cmd_mem     "mem"
+    .str_version "version"
+    .str_help    "help"
+    .str_exit    "exit"
+    .str_clear   "clear"
+    .str_mem     "mem"
+    .str_date    "date"
 
 terminate:
     ldi r1, 10
@@ -144,6 +146,14 @@ cmd_clear:
     swa r1, D_WRITE_STR
     ret
 
+cmd_date:
+    ldi r1, &strftime
+    swa r1, D_SET_TIME_FMT
+    ldi r1, 0x2850
+    swa r1, D_READ_TIME_FMT
+    swa r1, D_WRITE_STR
+    ret
+
 count_mem:
 
     ; Have we hit the stack?
@@ -222,35 +232,41 @@ execute:
     swa r1, 0x2910
 
     ; Commands
-    ldi r1, &cmd_version
+    ldi r1, &str_version
     cal check_cmd
     jne skip_version
     cal cmd_version
     skip_version:
 
-    ldi r1, &cmd_help
+    ldi r1, &str_help
     cal check_cmd
     jne skip_help
     cal cmd_help
     skip_help:
 
-    ldi r1, &cmd_exit
+    ldi r1, &str_exit
     cal check_cmd
     jne skip_exit
     cal cmd_exit
     skip_exit:
 
-    ldi r1, &cmd_clear
+    ldi r1, &str_clear
     cal check_cmd
     jne skip_clear
     cal cmd_clear
     skip_clear:
 
-    ldi r1, &cmd_mem
+    ldi r1, &str_mem
     cal check_cmd
     jne skip_mem
     cal cmd_mem
     skip_mem:
+
+    ldi r1, &str_date
+    cal check_cmd
+    jne skip_date
+    cal cmd_date
+    skip_date:
 
     ; Check command status
     cal check_cmd_status
