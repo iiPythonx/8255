@@ -8,12 +8,14 @@ preload:
     .goodbye   "\n\033[31mGoodbye!\033[0m\n"
     .no_cmd    "\033[32mNocturne\033[0m: no such command exists!\n"
     .version   "\033[32mNocturne Shell\033[0m v0.2.0, powered by \033[34m8255\033[0m.\n"
-    .help      "Commands: \033[32mhelp\033[0m, \033[32mmem\033[0m, \033[32mdate\033[0m, \033[32mclear\033[0m, \033[32mversion\033[0m, \033[32mexit\033[0m\n"
+    .help      "Commands: \033[32mhelp\033[0m, \033[32mmem\033[0m, \033[32mreg\033[0m, \033[32mdate\033[0m, \033[32mclear\033[0m, \033[32mversion\033[0m, \033[32mexit\033[0m\n"
     .strftime  "%a %b %-d %H:%M:%S %p %Z %Y\n"
     .mem1      "Probing... "
     .mem2      "\rMemory usage: "
     .mem3      " B / 4096 B ("
     .mem4      "%)\n"
+    .reg1      ": "
+    .reg2      " | "
 
     ; Commands
     .str_version "version"
@@ -21,6 +23,7 @@ preload:
     .str_exit    "exit"
     .str_clear   "clear"
     .str_mem     "mem"
+    .str_reg     "reg"
     .str_date    "date"
 
 terminate:
@@ -154,6 +157,54 @@ cmd_date:
     swa r1, D_WRITE_STR
     ret
 
+print_reg:
+    ldi r1, 'R'
+    swa r1, D_WRITE_CHR
+    swa r2, D_WRITE_CHR
+    ldi r1, &reg1
+    swa r1, D_WRITE_STR
+    lwr r1, r3
+    swa r1, D_WRITE_INT
+    ldi r1, 57
+    cmp r2, r1
+    jeq skip_reg_print
+    ldi r1, &reg2
+    swa r1, D_WRITE_STR
+    skip_reg_print:
+    ret
+
+reg_loop:
+    cal print_reg
+    inc r2
+    inc r3
+    inc r3
+    ldi r1, 58
+    cmp r2, r1
+    jeq skip_reg_jump
+    jmp reg_loop
+    skip_reg_jump:
+    ret
+
+cmd_reg:
+    swa r1, 0x2850
+    swa r2, 0x2852
+    swa r3, 0x2854
+    swa r4, 0x2856
+    swa r5, 0x2858
+    swa r6, 0x285A
+    swa r7, 0x285C
+    swa r8, 0x285E
+    swa r9, 0x2860
+
+    ldi r2, '1'
+    ldi r3, 0x2850
+    cal reg_loop
+
+    ldi r1, 10
+    swa r1, D_WRITE_CHR
+
+    ret
+
 count_mem:
 
     ; Have we hit the stack?
@@ -261,6 +312,12 @@ execute:
     jne skip_mem
     cal cmd_mem
     skip_mem:
+
+    ldi r1, &str_reg
+    cal check_cmd
+    jne skip_reg
+    cal cmd_reg
+    skip_reg:
 
     ldi r1, &str_date
     cal check_cmd
