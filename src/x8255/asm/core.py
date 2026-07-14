@@ -97,7 +97,7 @@ def generate_snapshot(sections: dict[str, "Section"], zero_jump: bool = False, d
 
         subroutines[name] = components["code"].index
         for index, line in enumerate(section.lines):
-            arguments = line.split(",")
+            arguments = line.split(",", 1)
             instruction, *arguments = [a.strip() for a in arguments[0].split() + arguments[1:]]
 
             # Ensure instruction is valid
