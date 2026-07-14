@@ -14,6 +14,9 @@ class Emu8255:
     def __init__(self, enabled_drivers: list[str] = ["stdio"], enable_debugger: bool = False) -> None:
         self.memory = bytearray(0x4000)
 
+        # Initialize stack
+        self.write_register(0xC, 2)
+
         # Initialize debugger
         self.enable_debugger = enable_debugger
         if self.enable_debugger:
@@ -28,12 +31,12 @@ class Emu8255:
 
     def write_register(self, register_id: int, value: int) -> None:
         offset = REGISTERS_BY_ID[register_id].address
-        self.memory[offset:offset + 2] = value.to_bytes(2)
+        self.write_range(value.to_bytes(2), offset)
 
     def push_stack(self, value: int) -> None:
         existing_offset = self.read_register(0xC)
         stack_offset = Addresses.STACK.end - existing_offset
-        self.memory[stack_offset:stack_offset + 2] = value.to_bytes(2)
+        self.write_range(value.to_bytes(2), stack_offset)
         self.write_register(0xC, existing_offset + 2)
 
     def pop_stack(self) -> int:
@@ -102,7 +105,7 @@ class Emu8255:
 
                 value = self.read_register(arguments[0])
                 if not self.drivers.on_write(offset, value):
-                    self.memory[offset:offset + data_size] = value.to_bytes(data_size)
+                    self.write_range(value.to_bytes(data_size), offset)
 
             case "CMP":
                 left, right = self.read_register(arguments[0]), self.read_register(arguments[1])
@@ -144,9 +147,13 @@ class Emu8255:
             self.debugger.step()
 
     def write_range(self, data: bytes, offset: int) -> None:
+        last_byte_offset = offset + len(data)
+        if last_byte_offset > 0x4000:
+            raise RuntimeError("Attempted to write outside of available system memory range!\n" \
+                f"Write at: {offset} ({hex(offset)}), would end at {last_byte_offset} ({hex(last_byte_offset)}), which is outside 0x4000.")
+
         self.memory[offset:offset + len(data)] = data
 
     def terminate(self) -> None:
-        terminate_instruction = self.memory[0x2700]
-        if terminate_instruction:
+        if (terminate_instruction := self.memory[0x2700]):
             self.write_register(0xA, terminate_instruction)
