@@ -9,6 +9,8 @@
 #   W 0x0054 - Set memory address of strftime string
 #   W 0x0056 - Read time in strftime format to specified memory address
 #   W 0x0058 - Sleep main thread for specified duration in milliseconds
+#   W 0x005A - Set elapsed clock to zero
+#   R 0x005C - Read elapsed clock in requested unit (MONTH and YEAR unsupported)
 #
 # Options:
 #   0x0050 -> 0: Millisecond
@@ -28,7 +30,8 @@
 #   ldi r1, 500
 #   swa r1, 0x0054  ; Halt main thread for 500ms
 
-from time import sleep
+import math
+from time import perf_counter, sleep
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
@@ -41,10 +44,13 @@ class Driver:
         core.bind_write("SET_TIME_FMT",  0x0054, self.write_strftime)
         core.bind_write("READ_TIME_FMT", 0x0056, self.read_strftime)
         core.bind_write("SLEEP",         0x0058, self.write_sleep)
+        core.bind_write("ZERO_CLOCK",    0x005A, self.write_zero_clock)
+        core.bind_read( "READ_ELAPSED",  0x005C, self.read_elapsed)
 
         # State
         self.selection = 0
         self.strftime_address = 0
+        self.elapsed_start = 0
 
     @property
     def now(self) -> datetime:
@@ -88,3 +94,27 @@ class Driver:
 
     def write_sleep(self, memory: bytearray, value: int) -> None:
         sleep(value / 1000)
+
+    def write_zero_clock(self, memory: bytearray, value: int) -> None:
+        self.elapsed_start = perf_counter()
+
+    def read_elapsed(self, memory: bytearray) -> int:
+        elapsed = perf_counter() - self.elapsed_start
+        match self.selection:
+            case 0:
+                return math.floor(elapsed * 1000)
+
+            case 1:
+                return math.floor(elapsed)
+
+            case 2:
+                return math.floor(elapsed / 60)
+
+            case 3:
+                return math.floor(elapsed / 3600)
+
+            case 4:
+                return math.floor(elapsed / 86400)
+
+            case _:
+                return 0
