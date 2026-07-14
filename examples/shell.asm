@@ -1,21 +1,23 @@
 ; Copyright (c) 2026 iiPython
 
 preload:
-    .clear     "\033[2J\033[H"
-    .return    "\033[2K\r"
-    .prompt    "\033[32m$\033[0m "
-    .greeting  "\nWelcome to \033[32mNocturne Shell\033[0m!\nCopyright (c) 2026 iiPython\n\n"
-    .goodbye   "\n\033[31mGoodbye!\033[0m\n"
-    .no_cmd    "\033[32mNocturne\033[0m: no such command exists!\n"
-    .version   "\033[32mNocturne Shell\033[0m v0.2.0, powered by \033[34m8255\033[0m.\n"
-    .help      "Commands: \033[32mhelp\033[0m, \033[32mmem\033[0m, \033[32mreg\033[0m, \033[32mdate\033[0m, \033[32mclear\033[0m, \033[32mversion\033[0m, \033[32mexit\033[0m\n"
-    .strftime  "%a %b %-d %H:%M:%S %p %Z %Y\n"
-    .mem1      "Probing... "
-    .mem2      "\rMemory usage: "
-    .mem3      " B / 4096 B ("
-    .mem4      "%)\n"
-    .reg1      ": "
-    .reg2      " | "
+    .clear      "\033[2J\033[H"
+    .return     "\033[2K\r"
+    .prompt     "\033[32m$\033[0m "
+    .greeting   "\nWelcome to \033[32mNocturne Shell\033[0m!\nCopyright (c) 2026 iiPython\n\n"
+    .goodbye    "\n\033[31mGoodbye!\033[0m\n"
+    .no_cmd     "\033[32mNocturne\033[0m: no such command exists!\n"
+    .version    "\033[32mNocturne Shell\033[0m v0.2.0, powered by \033[34m8255\033[0m.\n"
+    .help_pre   "Commands: "
+    .help_green "\033[32m"
+    .help_reset "\033[0m"
+    .strftime   "%a %b %-d %H:%M:%S %p %Z %Y\n"
+    .mem1       "Probing... "
+    .mem2       "\rMemory usage: "
+    .mem3       " B / 4096 B ("
+    .mem4       "%)\n"
+    .reg1       ": "
+    .reg2       " | "
 
     ; Commands
     .str_version "version"
@@ -46,97 +48,120 @@ write:
     swa r1, D_WRITE_STR
     ret
 
-check_failed:
-    ldi r1, 1
+match_command:
+    ; R2 = Memory address of string 1
+    ; R3 = Memory address of string 2
+    lbr r4, r2  ; R4 = String 1 character
+    lbr r5, r3  ; R5 = String 2 character
+
+    ; Check if they aren't the same (quick abort)
+    cmp r4, r5
+    jeq skip_abort
+
+    ; They are in fact not the same, abort now
+    ldi r9, 0
     ret
 
-_check_left:
-    ldi r8, 1
-    ret
+    skip_abort:
 
-_check_left_fail:
-    ldi r8, 0
-    ret
+    ; They are in fact the same, continue processing
+    ldi r5, 0   ; Overwriting r5 is fine now, value used
+    cmp r4, r5  ; Check if r4 is zero
+    jne skip_abort2
 
-check_left:
-    ldi r7, 0
-    cmp r3, r7
-    jeq _check_left
-    jne _check_left_fail
-    ret
-
-_check_right:
+    ; Both characters were the same, and were both zero, so match is good
     ldi r9, 1
     ret
 
-_check_right_fail:
-    ldi r9, 2
+    skip_abort2:
+
+    inc r2
+    inc r3
+    jmp match_command
+
+run_command:
+    mov lc, r4
+
+iterate_command_table:
+
+    ; R1 = Memory address of command table
+    lwr r2, r1
+    ldi r3, 0x2400
+
+    ; Check for zero (end of table)
+    ldi r4, 0
+    cmp r2, r4
+    jne continue_loop
     ret
 
-check_right:
-    ldi r7, 0
-    cmp r4, r7
-    jeq _check_right
-    jne _check_right_fail
-    ret
+    ; Match the command
+    continue_loop:
+    cal match_command
 
-cmd_read_abort:
-    ldi r1, 0
-    ret
-
-_check_cmd:
-
-    ; Read current bytes
-    lbr r3, r1
-
-    ldi r4, 0x2400
-    add r4, r5
-    lbr r4, r4
-
-    ; Increment
+    ; Add 2 bytes
     inc r1
-    inc r5
+    inc r1
 
-    ; Check both sides
-    cal check_left
-    cal check_right
+    lwr r4, r1
 
-    cmp r8, r9
-    jeq cmd_read_abort
-
-    ; Comparison
-    cmp r3, r4
-    jeq _check_cmd
-    jne check_failed
-
-_set_cmd_status:
+    ; If success, run command
     ldi r8, 1
-    swa r8, 0x2910
+    cmp r9, r8
+    jne continue_loop2
+    swa r8, 0x2910       ; Mark as valid command
+    cal run_command
     ret
 
-set_cmd_status:
+    continue_loop2:
+
     ldi r8, 0
-    cmp cr, r8
-    jeq _set_cmd_status
-    ret
+    swa r8, 0x2910       ; Mark as invalid command
 
-check_cmd:
-    ldi r5, 0
-    cal _check_cmd
-    ldi r3, 0
-    cmp r1, r3
-    cal set_cmd_status
-    cmp r1, r3
-    ret
+    inc r1
+    inc r1
+
+    jmp iterate_command_table
 
 cmd_version:
     ldi r1, &version
     swa r1, D_WRITE_STR
     ret
 
+cmd_help_loop:
+    ldi r4, &help_green
+    swa r4, D_WRITE_STR
+    swa r3, D_WRITE_STR
+    ldi r4, &help_reset
+    swa r4, D_WRITE_STR
+
+    add r1, r2
+
+    lwr r3, r1
+    ldi r4, 0
+    cmp r3, r4
+    jne continue_printing
+    ret
+
+    continue_printing:
+    ldi r4, ','
+    swa r4, D_WRITE_CHR
+    ldi r4, ' '
+    swa r4, D_WRITE_CHR
+    jmp cmd_help_loop
+
 cmd_help:
-    ldi r1, &help
+    ldi r1, &help_pre
     swa r1, D_WRITE_STR
+
+    ldi r1, 0x2800
+    ldi r2, 4
+    lwr r3, r1
+    cal cmd_help_loop
+
+    ; Newline
+    ldi r1, 10
+    swa r1, D_WRITE_CHR
+
     ret
 
 cmd_exit:
@@ -260,16 +285,64 @@ cmd_mem:
     swa r1, D_WRITE_STR
     ret
 
-no_such_command:
-    ldi r1, &no_cmd
-    swa r1, D_WRITE_STR
-    ret
-
-check_cmd_status:
+validate_command_status:
     lwa r1, 0x2910
     ldi r7, 1
     cmp r1, r7
     jne no_such_command
+    ret
+
+    no_such_command:
+    ldi r1, &no_cmd
+    swa r1, D_WRITE_STR
+    ret
+
+register_command:
+    swr r2, r1
+    add r1, r4
+    swr r3, r1
+    add r1, r4
+    ret
+
+init_table:
+    ldi r1, 0x2800
+    ldi r4, 2
+
+    ; version
+    ldi r2, &str_version
+    ldi r3, cmd_version
+    cal register_command
+
+    ; help
+    ldi r2, &str_help
+    ldi r3, cmd_help
+    cal register_command
+
+    ; exit
+    ldi r2, &str_exit
+    ldi r3, cmd_exit
+    cal register_command
+
+    ; clear
+    ldi r2, &str_clear
+    ldi r3, cmd_clear
+    cal register_command
+
+    ; mem
+    ldi r2, &str_mem
+    ldi r3, cmd_mem
+    cal register_command
+
+    ; reg
+    ldi r2, &str_reg
+    ldi r3, cmd_reg
+    cal register_command
+
+    ; date
+    ldi r2, &str_date
+    ldi r3, cmd_date
+    cal register_command
+
     ret
 
 execute:
@@ -278,55 +351,12 @@ execute:
     ldi r1, 10
     swa r1, D_WRITE_CHR
 
-    ; String check
-    ldi r1, 0
-    swa r1, 0x2910
-
-    ; Commands
-    ldi r1, &str_version
-    cal check_cmd
-    jne skip_version
-    cal cmd_version
-    skip_version:
-
-    ldi r1, &str_help
-    cal check_cmd
-    jne skip_help
-    cal cmd_help
-    skip_help:
-
-    ldi r1, &str_exit
-    cal check_cmd
-    jne skip_exit
-    cal cmd_exit
-    skip_exit:
-
-    ldi r1, &str_clear
-    cal check_cmd
-    jne skip_clear
-    cal cmd_clear
-    skip_clear:
-
-    ldi r1, &str_mem
-    cal check_cmd
-    jne skip_mem
-    cal cmd_mem
-    skip_mem:
-
-    ldi r1, &str_reg
-    cal check_cmd
-    jne skip_reg
-    cal cmd_reg
-    skip_reg:
-
-    ldi r1, &str_date
-    cal check_cmd
-    jne skip_date
-    cal cmd_date
-    skip_date:
+    ; Check command matches
+    ldi r1, 0x2800
+    cal iterate_command_table
 
     ; Check command status
-    cal check_cmd_status
+    cal validate_command_status
 
     ; Reset feed address
     ldi r2, 0x2400
@@ -396,6 +426,7 @@ shell:
     jmp shell
 
 main:
+    cal init_table
 
     ; Greeting
     ldi r1, &clear
