@@ -7,7 +7,7 @@ preload:
     .greeting   "\nWelcome to \033[32mNocturne Shell\033[0m!\nCopyright (c) 2026 iiPython\n\n"
     .goodbye    "\n\033[31mGoodbye!\033[0m\n"
     .no_cmd     "\033[32mNocturne\033[0m: no such command exists!\n"
-    .version    "\033[32mNocturne Shell\033[0m v0.2.0, powered by \033[34m8255\033[0m.\n"
+    .version    "\033[32mNocturne Shell\033[0m v0.3.0, powered by \033[34m8255\033[0m.\n"
     .help_pre   "Commands: "
     .help_green "\033[32m"
     .help_reset "\033[0m"
@@ -18,6 +18,7 @@ preload:
     .mem4       "%)\n"
     .reg1       ": "
     .reg2       " | "
+    .memdump    "Memory snapshot written to snapshot.bin!\n"
 
     ; Commands
     .str_version "version"
@@ -27,6 +28,7 @@ preload:
     .str_mem     "mem"
     .str_reg     "reg"
     .str_date    "date"
+    .str_memdump "memdump"
 
 terminate:
     ldi r1, 10
@@ -285,6 +287,12 @@ cmd_mem:
     swa r1, D_WRITE_STR
     ret
 
+cmd_memdump:
+    ldi r1, &memdump
+    swa r1, D_MEMORY_SNAPSHOT
+    swa r1, D_WRITE_STR
+    ret
+
 validate_command_status:
     lwa r1, 0x2910
     ldi r7, 1
@@ -341,6 +349,11 @@ init_table:
     ; date
     ldi r2, &str_date
     ldi r3, cmd_date
+    cal register_command
+
+    ; memdump
+    ldi r2, &str_memdump
+    ldi r3, cmd_memdump
     cal register_command
 
     ret
