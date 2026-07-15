@@ -71,7 +71,7 @@ class Assembler:
 
         try:
             value = int(argument)
-            if value < 0 or value > 0x4000:
+            if value < 0 or value > 0xFFFF:
                 raise exception.AssemblerError(
                     "Integer either negative or too large to store!",
                     self.line_index, offset, argument
