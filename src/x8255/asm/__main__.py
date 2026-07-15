@@ -6,7 +6,8 @@ from time import perf_counter
 
 from x8255.cli import p, cexit
 from x8255.vm.drivers import DriverManager
-from x8255.asm.core import parse_sections_from_file, generate_snapshot
+from x8255.asm.token import parse_file
+from x8255.asm.assemble import Assembler
 
 def main() -> None:
     p.add_argument("source", type = Path, help = "path to source code")
@@ -22,21 +23,17 @@ def main() -> None:
     if not file.is_file():
         cexit("The provided file path does not exist.")
 
-    # Parse sections
-    sections = parse_sections_from_file(file)
-
     # Initialize requested drivers
     # We need to do this to retrieve their name mappings
     enabled_drivers = args.drivers.split(",") if not args.no_drivers else []
     drivers = DriverManager(bytearray(), enabled_drivers)
 
+    # Initialize assembler
+    asm = Assembler(parse_file(file), drivers.binding_names)
+
     # Build snapshot
     start_time = perf_counter()
-    snapshot = generate_snapshot(
-        sections,
-        zero_jump = args.zero_jump,
-        driver_map = drivers.binding_names
-    )
+    snapshot = asm.assemble(zero_jump = args.zero_jump)
     elapsed = perf_counter() - start_time
 
     # Add in the enabled driver names
