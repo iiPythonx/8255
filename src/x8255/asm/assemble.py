@@ -1,5 +1,6 @@
 # Copyright (c) 2026 iiPython
 
+from x8255.asm import exception
 from x8255.isa import INSTRUCTIONS, REGISTERS, Addresses
 from x8255.asm.token import ParseState
 
@@ -14,6 +15,7 @@ class Assembler:
         self.state = state
         self.driver_mapping: dict[str, int] = driver_mapping
 
+        self.line_index: int = 0
         self.code_offset: int = 0
         self.subroutines: dict[str, list[int]] = {}
 
@@ -40,19 +42,19 @@ class Assembler:
 
         return mapping
 
-    def parse_argument(self, argument: str, size: int) -> int:
+    def parse_argument(self, offset: int, argument: str, size: int) -> int:
         if (a := argument.upper()) in REGISTERS_BY_NAME:
             return REGISTERS_BY_NAME[a].id
 
         if size == 1:
-            raise Exception(f"Invalid value provided for a register: '{argument}'!")
+            raise exception.AssemblerError(f"Invalid value provided for a register: '{argument}'!", self.line_index, offset, argument)
 
         if argument.startswith("0x"):
             return int(argument, 16)
 
         if argument.startswith("&"):
             if (argument := argument[1:]) not in self.string_mapping:
-                raise Exception(f"Reference to an unknown string: '{argument}'!")
+                raise exception.AssemblerError(f"Reference to an unknown string: '{argument}'!", self.line_index, offset, argument)
 
             return self.string_mapping[argument]
 
@@ -70,12 +72,18 @@ class Assembler:
         try:
             value = int(argument)
             if value < 0 or value > 0x4000:
-                raise Exception("Integer either negative or too large to store!")
+                raise exception.AssemblerError(
+                    "Integer either negative or too large to store!",
+                    self.line_index, offset, argument
+                )
 
             return value
 
         except ValueError:
-            raise Exception(f"Argument matches no known types and is thus invalid: '{argument}'!")
+            raise exception.AssemblerError(
+                f"Argument matches no known types and is thus invalid: '{argument}'!",
+                self.line_index, offset, argument
+            )
 
     def assemble(self, zero_jump: bool = False) -> bytearray:
         if zero_jump:
@@ -83,19 +91,25 @@ class Assembler:
 
         subroutine_addresses: dict[str, int] = {}
         for index, (instruction, *arguments) in enumerate(self.state.lines):
+            self.line_index = index
+
+            # Attempt to find matching label
             label_match = next(filter(lambda x: self.state.labels[x] == index, self.state.labels), None)
             if label_match:
                 subroutine_addresses[label_match] = self.code_offset
 
+            # Push instruction bytecode
             if instruction not in INSTRUCTS_BY_VERB:
-                raise Exception("Invalid instruction referenced!")
+                raise exception.AssemblerError("Invalid instruction referenced!", self.line_index)
 
             bytecode, instruction = INSTRUCTS_BY_VERB[instruction]
             self.write_code(bytecode.to_bytes())
 
             # Argument mapping
+            argument_offset = len(instruction.opcode) + 1
             for index, argument in enumerate(instruction.args):
-                self.write_code(self.parse_argument(arguments[index], argument.size).to_bytes(argument.size))
+                self.write_code(self.parse_argument(argument_offset + index, arguments[index], argument.size).to_bytes(argument.size))
+                argument_offset += len(arguments[index])
 
         for subroutine, addresses in self.subroutines.items():
             for address in addresses:

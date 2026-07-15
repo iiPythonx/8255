@@ -1,6 +1,7 @@
 # Copyright (c) 2026 iiPython
 
 import re
+import typing
 from pathlib import Path
 from dataclasses import dataclass
 
@@ -61,9 +62,9 @@ def parse_line(line: str) -> list[str]:
 
     return state.chunks
 
-def parse_file(file: Path) -> ParseState:
+def parse_file(file: Path, callback: typing.Callable | None = None) -> ParseState:
     state = ParseState(0, [], {}, None, {})
-    for line in file.read_text().splitlines():
+    for index, line in enumerate(file.read_text().splitlines()):
         line = line.strip()
 
         # Handle skipping
@@ -101,5 +102,8 @@ def parse_file(file: Path) -> ParseState:
         # Normal lines
         state.lines.append(parse_line(line))
         state.index += 1
+
+        if callback is not None:
+            callback(state, index)
 
     return state

@@ -8,6 +8,7 @@ from x8255.cli import p, cexit
 from x8255.vm.drivers import DriverManager
 from x8255.asm.token import parse_file
 from x8255.asm.assemble import Assembler
+from x8255.asm import exception
 
 def main() -> None:
     p.add_argument("source", type = Path, help = "path to source code")
@@ -22,6 +23,8 @@ def main() -> None:
     file = Path(args.source)
     if not file.is_file():
         cexit("The provided file path does not exist.")
+
+    exception.set_file(file)
 
     # Initialize requested drivers
     # We need to do this to retrieve their name mappings
